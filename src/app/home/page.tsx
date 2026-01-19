@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app-header";
+import { Announcements } from "@/components/home/announcements";
 import { Events } from "@/components/home/events";
 import { Feedback } from "@/components/home/feedback";
 import { Hero } from "@/components/home/hero";
@@ -13,6 +14,7 @@ export default function HomePage() {
         <Hero />
         <Projects />
         <Events />
+        <Announcements />
         <Feedback />
       </main>
       <IskaiChatbot />
