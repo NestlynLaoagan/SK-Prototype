@@ -44,6 +44,10 @@ const formSchema = z.object({
   youthAgeGroup: z.string({ required_error: "Please select an age group." }),
   youthClassification: z.string({ required_error: "Please select a classification." }),
   specialNeeds: z.string().optional(),
+  educationalBackground: z.string({ required_error: "Please select an educational background." }),
+  isSkVoter: z.enum(["yes", "no"], { required_error: "This field is required." }),
+  votedLastElection: z.enum(["yes", "no"], { required_error: "This field is required." }),
+  isNationalVoter: z.enum(["yes", "no"], { required_error: "This field is required." }),
 }).refine(data => {
     if (data.youthClassification === 'youth with special needs' && !data.specialNeeds) {
         return false;
@@ -64,6 +68,7 @@ export function ProfileForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
         specialNeeds: "",
+        educationalBackground: "",
     }
   });
 
@@ -84,14 +89,14 @@ export function ProfileForm() {
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log({...values, age});
     toast({
-      title: "Profile Updated!",
+      title: "Profile Created!",
       description: "Your information has been saved successfully.",
     });
     router.push("/home");
   }
 
   return (
-    <Card className="w-full max-w-3xl">
+    <Card className="w-full max-w-3xl my-8">
       <CardHeader>
         <CardTitle className="text-3xl font-headline">Complete Your Profile</CardTitle>
         <CardDescription>
@@ -161,7 +166,7 @@ export function ProfileForm() {
                             <RadioGroup
                             onValueChange={field.onChange}
                             defaultValue={field.value}
-                            className="flex flex-col space-y-2"
+                            className="flex space-x-4"
                             >
                             <FormItem className="flex items-center space-x-3 space-y-0">
                                 <FormControl>
@@ -254,32 +259,57 @@ export function ProfileForm() {
                     )}
                 />
             </div>
-            <FormField
-                control={form.control}
-                name="youthClassification"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Youth Classification</FormLabel>
-                    <Select onValueChange={(value) => {
-                        field.onChange(value);
-                        setShowSpecialNeeds(value === 'youth with special needs');
-                    }} defaultValue={field.value}>
-                        <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select your classification" />
-                        </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            <SelectItem value="in-school">In school youth</SelectItem>
-                            <SelectItem value="out-of-school">Out of school youth</SelectItem>
-                            <SelectItem value="working">Working youth</SelectItem>
-                            <SelectItem value="youth with special needs">Youth with special needs</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <FormField
+                    control={form.control}
+                    name="youthClassification"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Youth Classification</FormLabel>
+                        <Select onValueChange={(value) => {
+                            field.onChange(value);
+                            setShowSpecialNeeds(value === 'youth with special needs');
+                        }} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select your classification" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="in-school">In school youth</SelectItem>
+                                <SelectItem value="out-of-school">Out of school youth</SelectItem>
+                                <SelectItem value="working">Working youth</SelectItem>
+                                <SelectItem value="youth with special needs">Youth with special needs</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="educationalBackground"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Educational Background</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select your attainment" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="elementary">Elementary</SelectItem>
+                                <SelectItem value="highschool">High School</SelectItem>
+                                <SelectItem value="college">College</SelectItem>
+                                <SelectItem value="vocational">Vocational</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
             {showSpecialNeeds && (
                  <FormField
                     control={form.control}
@@ -295,7 +325,104 @@ export function ProfileForm() {
                     )}
                 />
             )}
-            <Button type="submit" size="lg" className="text-lg">Update Profile</Button>
+
+            <div className="space-y-4">
+                <h3 className="text-lg font-medium">Voter Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <FormField
+                        control={form.control}
+                        name="isSkVoter"
+                        render={({ field }) => (
+                            <FormItem className="space-y-3">
+                            <FormLabel>Registered SK Voter?</FormLabel>
+                            <FormControl>
+                                <RadioGroup
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                className="flex space-x-4"
+                                >
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl>
+                                    <RadioGroupItem value="yes" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">Yes</FormLabel>
+                                </FormItem>
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl>
+                                    <RadioGroupItem value="no" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">No</FormLabel>
+                                </FormItem>
+                                </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="votedLastElection"
+                        render={({ field }) => (
+                            <FormItem className="space-y-3">
+                            <FormLabel>Voted Last Election?</FormLabel>
+                            <FormControl>
+                                <RadioGroup
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                className="flex space-x-4"
+                                >
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl>
+                                    <RadioGroupItem value="yes" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">Yes</FormLabel>
+                                </FormItem>
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl>
+                                    <RadioGroupItem value="no" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">No</FormLabel>
+                                </FormItem>
+                                </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="isNationalVoter"
+                        render={({ field }) => (
+                            <FormItem className="space-y-3">
+                            <FormLabel>National Voter?</FormLabel>
+                            <FormControl>
+                                <RadioGroup
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                className="flex space-x-4"
+                                >
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl>
+                                    <RadioGroupItem value="yes" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">Yes</FormLabel>
+                                </FormItem>
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl>
+                                    <RadioGroupItem value="no" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">No</FormLabel>
+                                </FormItem>
+                                </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
+            </div>
+            
+            <Button type="submit" size="lg" className="text-lg">Create Profile</Button>
           </form>
         </Form>
       </CardContent>
