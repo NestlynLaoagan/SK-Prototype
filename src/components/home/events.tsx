@@ -1,7 +1,6 @@
 "use client"
 import * as React from "react"
-import { addMonths, format, startOfMonth } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
+import { startOfMonth } from "date-fns"
 
 import {
   Carousel,
@@ -11,7 +10,6 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel"
 import { Calendar } from "@/components/ui/calendar"
-import { Card, CardContent } from "../ui/card"
 
 
 const events = [
@@ -22,33 +20,9 @@ const events = [
 ];
 
 export function Events() {
-  const [currentDate, setCurrentDate] = React.useState(new Date())
-
-  const firstHalfMonths = Array.from({ length: 6 }, (_, i) => addMonths(startOfMonth(new Date(currentDate.getFullYear(), 0, 1)), i));
-  const secondHalfMonths = Array.from({ length: 6 }, (_, i) => addMonths(startOfMonth(new Date(currentDate.getFullYear(), 6, 1)), i));
-
-  const renderCalendarGrid = (months: Date[]) => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {months.map((month) => (
-        <Card key={month.toString()}>
-          <CardContent className="p-2">
-            <Calendar
-                month={month}
-                modifiers={{ highlighted: events }}
-                modifiersClassNames={{
-                    highlighted: 'bg-primary text-primary-foreground rounded-full',
-                }}
-                className="p-0"
-                classNames={{
-                    caption_label: "font-headline",
-                }}
-                onMonthChange={(m) => {}} // prevent month change within calendar
-            />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  )
+  const [currentDate] = React.useState(new Date())
+  const firstMonth = startOfMonth(new Date(currentDate.getFullYear(), 0, 1));
+  const seventhMonth = startOfMonth(new Date(currentDate.getFullYear(), 6, 1));
 
   return (
     <section id="events" className="w-full py-16 md:py-24 lg:py-32 bg-secondary/50">
@@ -62,11 +36,39 @@ export function Events() {
 
         <Carousel className="w-full max-w-6xl">
           <CarouselContent>
-            <CarouselItem>
-                {renderCalendarGrid(firstHalfMonths)}
+            <CarouselItem className="flex justify-center">
+                <Calendar
+                    numberOfMonths={6}
+                    month={firstMonth}
+                    modifiers={{ highlighted: events }}
+                    modifiersClassNames={{
+                        highlighted: 'bg-primary text-primary-foreground rounded-full',
+                    }}
+                    onMonthChange={() => {}}
+                    className="p-0"
+                    classNames={{
+                        months: 'flex flex-wrap gap-4 justify-center',
+                        month: 'border bg-card text-card-foreground shadow-sm rounded-lg p-3 w-full sm:w-auto',
+                        caption_label: "font-headline",
+                    }}
+                />
             </CarouselItem>
-            <CarouselItem>
-                {renderCalendarGrid(secondHalfMonths)}
+            <CarouselItem className="flex justify-center">
+                 <Calendar
+                    numberOfMonths={6}
+                    month={seventhMonth}
+                    modifiers={{ highlighted: events }}
+                    modifiersClassNames={{
+                        highlighted: 'bg-primary text-primary-foreground rounded-full',
+                    }}
+                    onMonthChange={() => {}}
+                    className="p-0"
+                    classNames={{
+                        months: 'flex flex-wrap gap-4 justify-center',
+                        month: 'border bg-card text-card-foreground shadow-sm rounded-lg p-3 w-full sm:w-auto',
+                        caption_label: "font-headline",
+                    }}
+                />
             </CarouselItem>
           </CarouselContent>
           <CarouselPrevious className="-left-4 md:-left-12" />
