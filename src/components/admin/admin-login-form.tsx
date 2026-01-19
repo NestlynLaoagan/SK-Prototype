@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
+import { PasswordInput } from "../ui/password-input"
 
 const formSchema = z.object({
   username: z.string().min(1, "Username is required."),
@@ -35,8 +36,8 @@ export function AdminLoginForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
-      password: "",
+      username: "SkAdmin@372822023",
+      password: "HPGMHVXBCCX23",
     },
   })
 
@@ -102,7 +103,7 @@ export function AdminLoginForm() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <PasswordInput placeholder="••••••••" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { PasswordInput } from "@/components/ui/password-input";
 
 type User = {
     id: number;
@@ -150,9 +151,8 @@ export default function RolesPage() {
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="py-4">
-                <Input
+                <PasswordInput
                     id="admin-password"
-                    type="password"
                     placeholder="Admin Password"
                     value={adminPassword}
                     onChange={(e) => setAdminPassword(e.target.value)}

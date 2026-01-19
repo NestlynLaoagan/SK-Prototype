@@ -31,6 +31,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { PasswordInput } from "../ui/password-input"
 
 
 const settingsSchema = z.object({
@@ -157,7 +158,7 @@ export function SettingsForm() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>New Password</FormLabel>
-                                            <FormControl><Input type="password" {...field} /></FormControl>
+                                            <FormControl><PasswordInput {...field} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -168,7 +169,7 @@ export function SettingsForm() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Confirm New Password</FormLabel>
-                                            <FormControl><Input type="password" {...field} /></FormControl>
+                                            <FormControl><PasswordInput {...field} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}

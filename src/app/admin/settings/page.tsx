@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export default function AdminSettingsPage() {
   return (
@@ -16,9 +16,9 @@ export default function AdminSettingsPage() {
             <CardDescription>Update your administrator password.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 max-w-md">
-            <Input type="password" placeholder="Current Password" />
-            <Input type="password" placeholder="New Password" />
-            <Input type="password" placeholder="Confirm New Password" />
+            <PasswordInput placeholder="Current Password" />
+            <PasswordInput placeholder="New Password" />
+            <PasswordInput placeholder="Confirm New Password" />
             <Button>Update Password</Button>
         </CardContent>
       </Card>
