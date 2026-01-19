@@ -1,9 +1,27 @@
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusCircle, MoreHorizontal } from "lucide-react";
+import { PlusCircle, MoreHorizontal, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
-const upcomingProjects = [
+
+type Project = {
+    id: number;
+    name: string;
+    status: string;
+    budget: string;
+};
+
+const initialUpcomingProjects: Project[] = [
     { id: 1, name: "Community Garden Phase 2", status: "In Progress", budget: "₱50,000" },
     { id: 2, name: "Youth Sports Fest 2025", status: "Planning", budget: "₱120,000" },
     { id: 3, name: "Barangay Hall Repainting", status: "Pending Approval", budget: "₱30,000" },
@@ -15,6 +33,33 @@ const accomplishedProjects = [
 ];
 
 export default function ProjectsPage() {
+  const [upcomingProjects, setUpcomingProjects] = useState<Project[]>(initialUpcomingProjects);
+  const { toast } = useToast();
+
+  const handleAddProject = () => {
+    const newProject: Project = {
+      id: upcomingProjects.length > 0 ? Math.max(...upcomingProjects.map(p => p.id)) + 1 : 1,
+      name: "New Project",
+      status: "Planning",
+      budget: "₱0",
+    };
+    setUpcomingProjects([...upcomingProjects, newProject]);
+    toast({
+      title: "New project added",
+      description: "A new project has been added. You can edit its details.",
+    });
+  };
+
+  const handleDeleteProject = (id: number) => {
+    setUpcomingProjects(upcomingProjects.filter(p => p.id !== id));
+    toast({
+      title: "Project deleted",
+      description: "The project has been successfully deleted.",
+      variant: "destructive",
+    });
+  };
+
+
   return (
     <div className="space-y-8">
       <div>
@@ -28,7 +73,7 @@ export default function ProjectsPage() {
                 <CardTitle>Upcoming Projects</CardTitle>
                 <CardDescription>Plan, monitor, and manage ongoing and future projects.</CardDescription>
             </div>
-            <Button>
+            <Button onClick={handleAddProject}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Project
             </Button>
@@ -50,7 +95,19 @@ export default function ProjectsPage() {
                             <TableCell>{project.status}</TableCell>
                             <TableCell>{project.budget}</TableCell>
                             <TableCell className="text-right">
-                                <Button variant="ghost" size="icon"><MoreHorizontal /></Button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => handleDeleteProject(project.id)} className="text-destructive">
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Delete
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </TableCell>
                         </TableRow>
                     ))}

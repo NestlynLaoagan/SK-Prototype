@@ -1,8 +1,11 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Download, Filter } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const profiles = [
     { id: 1, name: "Juan Dela Cruz", age: 25, gender: "Male", civilStatus: "Single", workStatus: "Employed" },
@@ -12,6 +15,16 @@ const profiles = [
 ];
 
 export default function ProfilesPage() {
+  const { toast } = useToast();
+
+  const handleExport = () => {
+    toast({
+        title: "Exporting data...",
+        description: "Your data is being prepared for download.",
+    });
+    // In a real app, this would trigger a download.
+  }
+
   return (
     <div className="space-y-8">
        <div className="flex justify-between items-start">
@@ -33,7 +46,7 @@ export default function ProfilesPage() {
                         </SelectContent>
                     </Select>
                  </div>
-                 <Button>
+                 <Button onClick={handleExport}>
                     <Download className="mr-2 h-4 w-4" />
                     Export as Spreadsheet
                  </Button>

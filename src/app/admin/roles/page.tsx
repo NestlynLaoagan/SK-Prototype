@@ -1,17 +1,46 @@
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-const users = [
+type User = {
+    id: number;
+    name: string;
+    username: string;
+    role: "Member" | "Admin";
+};
+
+const initialUsers: User[] = [
     { id: 1, name: "Juan Dela Cruz", username: "juandelacruz", role: "Member" },
     { id: 2, name: "Maria Clara", username: "mariaclara", role: "Member" },
     { id: 3, name: "Crisostomo Ibarra", username: "crisostomo", role: "Member" },
 ];
 
 export default function RolesPage() {
+  const [users, setUsers] = useState<User[]>(initialUsers);
+  const { toast } = useToast();
+
+  const handleRoleChange = (userId: number, role: "Member" | "Admin") => {
+    setUsers(users.map(user => user.id === userId ? { ...user, role } : user));
+  };
+
+  const handleSaveChanges = (userId: number) => {
+    const user = users.find(u => u.id === userId);
+    toast({
+      title: "Role Saved",
+      description: `Role for ${user?.name} has been updated to ${user?.role}.`,
+    });
+    // In a real app, you would make an API call here.
+    // The user also mentioned password verification, which would be implemented here.
+  };
+
+
   return (
     <div className="space-y-8">
       <div>
@@ -44,7 +73,7 @@ export default function RolesPage() {
                             <TableCell className="font-medium">{user.name}</TableCell>
                             <TableCell>{user.username}</TableCell>
                             <TableCell>
-                                <Select defaultValue={user.role}>
+                                <Select value={user.role} onValueChange={(value: "Member" | "Admin") => handleRoleChange(user.id, value)}>
                                     <SelectTrigger className="w-[120px]">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -55,7 +84,7 @@ export default function RolesPage() {
                                 </Select>
                             </TableCell>
                             <TableCell className="text-right">
-                                <Button>Save</Button>
+                                <Button onClick={() => handleSaveChanges(user.id)}>Save</Button>
                             </TableCell>
                         </TableRow>
                     ))}
