@@ -21,7 +21,13 @@ const formSchema = z.object({
   firstName: z.string().min(1, { message: "First name is required." }),
   lastName: z.string().min(1, { message: "Last name is required." }),
   username: z.string().min(3, { message: "Username must be at least 3 characters." }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters." }),
+  password: z.string()
+    .min(8, { message: "Password must be at least 8 characters." })
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/, "Password must contain at least one uppercase letter, one lowercase letter, and one number."),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+    message: "Passwords don't match.",
+    path: ["confirmPassword"],
 });
 
 export function SignupForm() {
@@ -33,6 +39,7 @@ export function SignupForm() {
       lastName: "",
       username: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
@@ -46,7 +53,7 @@ export function SignupForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Sign Up</CardTitle>
+        <CardTitle className="text-3xl">Sign Up</CardTitle>
         <CardDescription>Create a new account to join the community.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -106,8 +113,21 @@ export function SignupForm() {
                 </FormItem>
               )}
             />
+             <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="••••••••" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <Button type="submit" className="w-full">
-              Sign Up
+              Create Account
             </Button>
           </form>
         </Form>

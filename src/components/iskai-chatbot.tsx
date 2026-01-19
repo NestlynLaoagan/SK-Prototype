@@ -45,7 +45,6 @@ export function IskaiChatbot() {
 
         toast({
             title: "Feedback sent!",
-            description: "Your question has been received.",
         });
     } catch (error) {
         console.error("AI error:", error);

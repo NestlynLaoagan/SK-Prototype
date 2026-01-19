@@ -76,8 +76,8 @@ export function LoginForm() {
                 </FormItem>
               )}
             />
-            <div className="text-sm">
-                <Link href="#" className="font-medium text-primary hover:underline underline-offset-4">
+            <div className="text-sm text-right">
+                <Link href="#" className="font-medium text-primary underline underline-offset-4 hover:text-primary/90">
                   Forgot password?
                 </Link>
             </div>
