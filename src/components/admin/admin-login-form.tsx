@@ -23,7 +23,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 
 const formSchema = z.object({
-  email: z.string().email("Please enter a valid email."),
+  username: z.string().min(1, "Username is required."),
   password: z.string().min(1, "Password is required."),
 })
 
@@ -35,7 +35,7 @@ export function AdminLoginForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   })
@@ -43,11 +43,10 @@ export function AdminLoginForm() {
   const isLoading = form.formState.isSubmitting;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // Hardcoded check for the super admin credentials you provided
-    if (values.email === "SkAdmin@372822023" && values.password === "HPGMHVXBCCX23") {
+    if (values.username === "SkAdmin@372822023" && values.password === "HPGMHVXBCCX23") {
       try {
-        // We still sign in to establish an auth session, assuming this admin exists in Firebase Auth
-        const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+        // We use the username as the email for Firebase Auth, assuming it's a valid credential there.
+        const userCredential = await signInWithEmailAndPassword(auth, values.username, values.password);
         const user = userCredential.user;
 
         const userDocRef = doc(firestore, "users", user.uid);
@@ -60,6 +59,7 @@ export function AdminLoginForm() {
           })
           router.push("/admin")
         } else {
+          // This case handles if the user exists in Auth but not in Firestore as an admin
           await auth.signOut();
           toast({
             variant: "destructive",
@@ -68,7 +68,7 @@ export function AdminLoginForm() {
           });
         }
       } catch (error) {
-         await auth.signOut();
+         // This handles Firebase Auth errors (e.g., user not found, wrong password)
          toast({
             variant: "destructive",
             title: "Authentication Failed",
@@ -76,6 +76,7 @@ export function AdminLoginForm() {
           });
       }
     } else {
+        // This handles if the username/password don't match the hardcoded values
         toast({
             variant: "destructive",
             title: "Login Failed",
@@ -95,10 +96,10 @@ export function AdminLoginForm() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="email"
+                name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Username</FormLabel>
                     <FormControl>
                       <Input placeholder="SkAdmin@..." {...field} />
                     </FormControl>
@@ -129,5 +130,3 @@ export function AdminLoginForm() {
       </Card>
   )
 }
-
-    
