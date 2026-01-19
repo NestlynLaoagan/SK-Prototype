@@ -1,10 +1,12 @@
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
+import { useFirebase } from "@/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { Loader } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,27 +20,60 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  username: z.string().min(1, { message: "Username is required." }),
+  email: z.string().email({ message: "Please enter a valid email." }),
   password: z.string().min(1, { message: "Password is required." }),
 });
 
 export function LoginForm() {
   const router = useRouter();
+  const { auth } = useFirebase();
+  const { toast } = useToast();
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real app, you'd handle authentication here.
-    // For now, we'll just redirect to the home page on any input.
-    console.log(values);
-    router.push("/home");
+  const isLoading = form.formState.isSubmitting;
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      await signInWithEmailAndPassword(auth, values.email, values.password);
+      toast({
+        title: "Login Successful",
+        description: "Welcome back!",
+      });
+      router.push("/home");
+    } catch (error: any) {
+      console.error("Login failed:", error);
+      let errorMessage = "An unknown error occurred during login.";
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/user-not-found':
+          case 'auth/wrong-password':
+          case 'auth/invalid-credential':
+            errorMessage = 'Invalid email or password.';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'Please enter a valid email address.';
+            break;
+          default:
+            errorMessage = 'Failed to log in. Please try again.';
+            break;
+        }
+      }
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: errorMessage,
+      });
+    }
   }
 
   return (
@@ -52,12 +87,12 @@ export function LoginForm() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
-              name="username"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="your_username" {...field} />
+                    <Input placeholder="name@example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -81,7 +116,8 @@ export function LoginForm() {
                   Forgot password?
                 </Link>
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
               Log In
             </Button>
           </form>
@@ -90,3 +126,5 @@ export function LoginForm() {
     </Card>
   );
 }
+
+    

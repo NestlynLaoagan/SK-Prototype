@@ -6,7 +6,9 @@ import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader } from "lucide-react";
+import { useFirebase, useUser, setDocumentNonBlocking } from "@/firebase";
+import { doc } from "firebase/firestore";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -61,6 +63,8 @@ const formSchema = z.object({
 export function ProfileForm() {
   const router = useRouter();
   const { toast } = useToast();
+  const { firestore } = useFirebase();
+  const { user, isUserLoading } = useUser();
   const [showSpecialNeeds, setShowSpecialNeeds] = useState(false);
   const [age, setAge] = useState<number | null>(null);
 
@@ -85,15 +89,51 @@ export function ProfileForm() {
         setAge(calculatedAge);
     }
   }, [birthdate]);
+  
+   const youthClassification = form.watch("youthClassification");
+   useEffect(() => {
+    setShowSpecialNeeds(youthClassification === 'youth with special needs');
+   }, [youthClassification]);
+
+
+  if (isUserLoading) {
+    return <div className="flex items-center justify-center min-h-[50vh]"><Loader className="h-8 w-8 animate-spin" /></div>;
+  }
+
+  if (!user) {
+    router.replace('/login');
+    return null;
+  }
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log({...values, age});
+    if (!user) {
+        toast({ variant: "destructive", title: "Not authenticated", description: "You must be logged in to create a profile." });
+        return;
+    }
+
+    const profileData = {
+        ...values,
+        birthdate: format(values.birthdate, "yyyy-MM-dd"),
+        isSkVoter: values.isSkVoter === 'yes',
+        votedLastElection: values.votedLastElection === 'yes',
+        isNationalVoter: values.isNationalVoter === 'yes',
+        age: age,
+    };
+    
+    const userDocRef = doc(firestore, "users", user.uid);
+
+    // Use the non-blocking update function
+    setDocumentNonBlocking(userDocRef, profileData, { merge: true });
+
     toast({
-      title: "Profile Created!",
+      title: "Profile Updated!",
       description: "Your information has been saved successfully.",
     });
+
     router.push("/home");
   }
+
+  const isLoading = form.formState.isSubmitting;
 
   return (
     <Card className="w-full max-w-3xl my-8">
@@ -269,10 +309,7 @@ export function ProfileForm() {
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Youth Classification</FormLabel>
-                        <Select onValueChange={(value) => {
-                            field.onChange(value);
-                            setShowSpecialNeeds(value === 'youth with special needs');
-                        }} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select your classification" />
@@ -425,10 +462,15 @@ export function ProfileForm() {
                 </div>
             </div>
             
-            <Button type="submit" size="lg" className="text-lg">Create Profile</Button>
+            <Button type="submit" size="lg" className="text-lg" disabled={isLoading}>
+              {isLoading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
+              Create Profile
+            </Button>
           </form>
         </Form>
       </CardContent>
     </Card>
   );
 }
+
+    

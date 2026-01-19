@@ -4,6 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { useRouter } from "next/navigation"
+import { useFirebase } from "@/firebase"
+import { signInWithEmailAndPassword } from "firebase/auth"
+import { doc, getDoc } from "firebase/firestore"
+import { Loader } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -19,32 +23,65 @@ import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 
 const formSchema = z.object({
-  username: z.string().refine(val => val === "SkAdmin@372822023", {
-    message: "Invalid username.",
-  }),
-  password: z.string().refine(val => val === "HPGMHVXBCCX23", {
-    message: "Invalid password.",
-  }),
+  email: z.string().email("Please enter a valid email."),
+  password: z.string().min(1, "Password is required."),
 })
 
 export function AdminLoginForm() {
   const router = useRouter()
+  const { auth, firestore } = useFirebase()
   const { toast } = useToast()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    toast({
-      title: "Login Successful",
-      description: "Welcome, Admin!",
-    })
-    router.push("/admin")
+  const isLoading = form.formState.isSubmitting;
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    // Hardcoded check for the super admin credentials you provided
+    if (values.email === "SkAdmin@372822023" && values.password === "HPGMHVXBCCX23") {
+      try {
+        // We still sign in to establish an auth session, assuming this admin exists in Firebase Auth
+        const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+        const user = userCredential.user;
+
+        const userDocRef = doc(firestore, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists() && userDoc.data().role === 'admin') {
+          toast({
+            title: "Login Successful",
+            description: "Welcome, Admin!",
+          })
+          router.push("/admin")
+        } else {
+          await auth.signOut();
+          toast({
+            variant: "destructive",
+            title: "Access Denied",
+            description: "You do not have administrative privileges.",
+          });
+        }
+      } catch (error) {
+         await auth.signOut();
+         toast({
+            variant: "destructive",
+            title: "Authentication Failed",
+            description: "Invalid admin credentials or user not found in Firebase.",
+          });
+      }
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Login Failed",
+            description: "Invalid username or password.",
+        });
+    }
   }
 
   return (
@@ -58,10 +95,10 @@ export function AdminLoginForm() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="username"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input placeholder="SkAdmin@..." {...field} />
                     </FormControl>
@@ -82,7 +119,8 @@ export function AdminLoginForm() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                 {isLoading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
                 Log In
               </Button>
             </form>
@@ -91,3 +129,5 @@ export function AdminLoginForm() {
       </Card>
   )
 }
+
+    

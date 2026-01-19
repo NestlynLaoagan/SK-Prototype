@@ -8,28 +8,28 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the user entity."
+          "description": "Unique identifier for the user entity, matches Firebase Auth UID."
         },
-        "firstName": {
+        "fullName": {
           "type": "string",
-          "description": "The first name of the user."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "The last name of the user."
-        },
-        "username": {
-          "type": "string",
-          "description": "The username of the user."
+          "description": "The full name of the user."
         },
         "email": {
           "type": "string",
           "description": "The email address of the user.",
           "format": "email"
         },
-        "contactNumber": {
+        "role": {
           "type": "string",
-          "description": "The contact number of the user."
+          "description": "The role of the user.",
+          "enum": ["admin", "member"]
+        },
+        "birthdate": {
+            "type": "string",
+            "format": "date"
+        },
+        "gender": {
+            "type": "string"
         },
         "civilStatus": {
           "type": "string",
@@ -51,16 +51,24 @@
           "type": "string",
           "description": "Additional details for youth with special needs classification."
         },
-        "roleId": {
-          "type": "string",
-          "description": "Reference to Role. (Relationship: Role 1:N User)"
+        "educationalBackground": {
+            "type": "string"
+        },
+        "isSkVoter": {
+            "type": "boolean"
+        },
+        "votedLastElection": {
+            "type": "boolean"
+        },
+        "isNationalVoter": {
+            "type": "boolean"
         }
       },
       "required": [
         "id",
-        "firstName",
-        "lastName",
-        "username"
+        "fullName",
+        "email",
+        "role"
       ]
     },
     "Role": {
@@ -144,7 +152,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Event",
       "type": "object",
-      "description": "Represents an event within the barangay.",
+      "description": "Represents an event within a project.",
       "properties": {
         "id": {
           "type": "string",
@@ -243,40 +251,31 @@
         "date"
       ]
     },
-    "Settings": {
+     "Faq": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Settings",
+      "title": "FAQ",
       "type": "object",
-      "description": "Represents user settings.",
+      "description": "Represents a frequently asked question for the ISKAI chatbot.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the settings entity."
+          "description": "Unique identifier for the FAQ."
         },
-        "userId": {
+        "question": {
           "type": "string",
-          "description": "Reference to User. (Relationship: User 1:1 Settings)"
+          "description": "The question."
         },
-        "gmailAccount": {
+        "answer": {
           "type": "string",
-          "description": "The Gmail account associated with the user.",
-          "format": "email"
-        },
-        "twoFactorAuthentication": {
-          "type": "boolean",
-          "description": "Indicates whether two-factor authentication is enabled."
+          "description": "The answer."
         }
       },
-      "required": [
-        "id",
-        "userId"
-      ]
+      "required": ["id", "question", "answer"]
     }
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "password"
     ]
   },
   "firestore": {
@@ -288,45 +287,7 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Stores user profiles. Uses path-based ownership for private user data.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/roles/{roleId}",
-        "definition": {
-          "entityName": "Role",
-          "schema": {
-            "$ref": "#/backend/entities/Role"
-          },
-          "description": "Stores role definitions.",
-          "params": [
-            {
-              "name": "roleId",
-              "description": "The unique identifier for the role."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/roles_admin/{userId}",
-        "definition": {
-          "entityName": "Role",
-          "schema": {
-            "$ref": "#/backend/entities/Role"
-          },
-          "description": "Collection indicating admin privileges. Existence of a document grants admin rights.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user with admin privileges."
-            }
-          ]
+          "description": "Stores user profiles. Uses path-based ownership for private user data."
         }
       },
       {
@@ -336,29 +297,17 @@
           "schema": {
             "$ref": "#/backend/entities/Project"
           },
-          "description": "Stores project details.",
-          "params": [
-            {
-              "name": "projectId",
-              "description": "The unique identifier for the project."
-            }
-          ]
+          "description": "Stores project details."
         }
       },
       {
-        "path": "/events/{eventId}",
+        "path": "/projects/{projectId}/events/{eventId}",
         "definition": {
           "entityName": "Event",
           "schema": {
             "$ref": "#/backend/entities/Event"
           },
-          "description": "Stores event details.",
-          "params": [
-            {
-              "name": "eventId",
-              "description": "The unique identifier for the event."
-            }
-          ]
+          "description": "Stores event details nested within a project."
         }
       },
       {
@@ -368,17 +317,7 @@
           "schema": {
             "$ref": "#/backend/entities/Feedback"
           },
-          "description": "Stores user feedback. Uses path-based ownership to associate feedback with users.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user providing the feedback."
-            },
-            {
-              "name": "feedbackId",
-              "description": "The unique identifier for the feedback."
-            }
-          ]
+          "description": "Stores user feedback. Uses path-based ownership to associate feedback with users."
         }
       },
       {
@@ -388,36 +327,34 @@
           "schema": {
             "$ref": "#/backend/entities/Announcement"
           },
-          "description": "Stores barangay announcements.",
-          "params": [
-            {
-              "name": "announcementId",
-              "description": "The unique identifier for the announcement."
-            }
-          ]
+          "description": "Stores barangay announcements."
         }
       },
       {
-        "path": "/users/{userId}/settings/{settingsId}",
+        "path": "/faqs/{faqId}",
         "definition": {
-          "entityName": "Settings",
+          "entityName": "Faq",
           "schema": {
-            "$ref": "#/backend/entities/Settings"
+            "$ref": "#/backend/entities/Faq"
           },
-          "description": "Stores user-specific settings. Uses path-based ownership to ensure only the user can access their settings.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user whose settings are being stored."
-            },
-            {
-              "name": "settingsId",
-              "description": "The unique identifier for the settings document."
-            }
-          ]
+          "description": "Stores FAQs for the chatbot."
+        }
+      },
+      {
+        "path": "/logs/{logId}",
+        "definition": {
+            "schema": { "type": "object" },
+            "description": "Stores audit logs for admin actions."
+        }
+      },
+      {
+        "path": "/archives/{archiveId}",
+        "definition": {
+            "schema": { "type": "object" },
+            "description": "Stores archived data."
         }
       }
-    ],
-    "reasoning": "The Firestore structure is designed to support the BarangayConnect application's requirements for user management, project tracking, event scheduling, feedback collection, and announcement broadcasting, while adhering to the principles of Authorization Independence, Structural Segregation, Access Modeling, and Data Clarity. It incorporates denormalization to avoid hierarchical authorization dependencies, ensuring that security rules can be simple and robust.\n\n**Authorization Independence:**\n\n*   Roles:  Instead of relying on custom claims or hierarchical `get()` calls, roles are stored in a dedicated collection `/roles/{roleId}`. User documents themselves do not contain the role, but the existence of a document in `/roles_admin/{userId}` confers admin rights.\n\n**Structural Segregation:**\n\n*   User Data: Private user data is stored under `/users/{userId}`, providing path-based ownership and simple security rules.\n\n**Access Modeling:**\n\n*   Path-Based Ownership: The `/users/{userId}` collection utilizes path-based ownership for user-specific data.\n*   Global Roles: The `/roles_admin/{userId}` collection uses existence over content for determining admin privileges.\n\n**QAPs Support:**\n\n*   Secure List Operations: The structure enables secure `list` operations by segregating data based on ownership and access levels. For example, listing projects or events requires checking user roles or membership in relevant groups, without needing to filter based on document content.\n\nThe structure avoids mixing data with different access needs in the same collection, thus simplifying security rules. For instance, public announcements are stored separately from user-specific settings.\n\nDenormalization ensures that authorization information is readily available within each document, eliminating the need for complex `get()` calls in security rules. This approach enhances the performance and security of the application."
+    ]
   }
 }
+    

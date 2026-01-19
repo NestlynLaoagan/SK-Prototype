@@ -4,6 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
+import { useFirebase } from "@/firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { Loader } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,15 +20,17 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
-  firstName: z.string().min(1, { message: "First name is required." }),
-  lastName: z.string().min(1, { message: "Last name is required." }),
-  username: z.string().min(3, { message: "Username must be at least 3 characters." }),
+  fullName: z.string().min(1, { message: "Full name is required." }),
+  email: z.string().email({ message: "Please enter a valid email." }),
   password: z.string()
     .min(8, { message: "Password must be at least 8 characters." })
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/, "Password must contain at least one uppercase letter, one lowercase letter, and one number."),
   confirmPassword: z.string(),
+  captcha: z.boolean().refine(val => val === true, { message: "Please confirm you are not a robot." }),
 }).refine(data => data.password === data.confirmPassword, {
     message: "Passwords don't match.",
     path: ["confirmPassword"],
@@ -32,22 +38,71 @@ const formSchema = z.object({
 
 export function SignupForm() {
   const router = useRouter();
+  const { auth, firestore } = useFirebase();
+  const { toast } = useToast();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
-      username: "",
+      fullName: "",
+      email: "",
       password: "",
       confirmPassword: "",
+      captcha: false,
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real app, you'd handle user creation here.
-    // For now, we'll just redirect to the profile page.
-    console.log(values);
-    router.push("/profile");
+  const isLoading = form.formState.isSubmitting;
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+
+      await updateProfile(user, {
+        displayName: values.fullName,
+      });
+
+      const userDocRef = doc(firestore, "users", user.uid);
+      await setDoc(userDocRef, {
+        id: user.uid,
+        fullName: values.fullName,
+        email: values.email,
+        role: 'member',
+      });
+      
+      toast({
+        title: "Account Created!",
+        description: "Welcome! Please complete your profile.",
+      });
+
+      router.push("/profile");
+
+    } catch (error: any) {
+      console.error("Signup failed:", error);
+      let errorMessage = "An unknown error occurred during signup.";
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            errorMessage = 'This email is already registered.';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'Please enter a valid email address.';
+            break;
+          case 'auth/weak-password':
+            errorMessage = 'The password is too weak.';
+            break;
+          default:
+            errorMessage = 'Failed to create an account. Please try again.';
+            break;
+        }
+      }
+       toast({
+        variant: "destructive",
+        title: "Signup Failed",
+        description: errorMessage,
+      });
+    }
   }
 
   return (
@@ -59,42 +114,27 @@ export function SignupForm() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-             <div className="grid grid-cols-2 gap-4">
-                <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>First Name</FormLabel>
-                    <FormControl>
-                        <Input placeholder="Juan" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Last Name</FormLabel>
-                    <FormControl>
-                        <Input placeholder="Dela Cruz" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-            </div>
+             <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                  <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
+                      <Input placeholder="Juan Dela Cruz" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                  </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
-              name="username"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="juandelacruz" {...field} />
+                    <Input placeholder="name@example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -126,7 +166,28 @@ export function SignupForm() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
+             <FormField
+              control={form.control}
+              name="captcha"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      I am not a robot
+                    </FormLabel>
+                  </div>
+                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
               Create Account
             </Button>
           </form>
@@ -135,3 +196,5 @@ export function SignupForm() {
     </Card>
   );
 }
+
+    
