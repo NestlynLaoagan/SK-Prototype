@@ -26,7 +26,7 @@ export function Events() {
   const yearEvents = events.filter(d => d.getFullYear() === year);
 
   const calendarClassNames = {
-      months: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full',
+      months: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8',
       month: 'border bg-card text-card-foreground shadow-md rounded-xl p-4 space-y-4',
       caption: 'flex items-center justify-center relative mb-4',
       caption_label: "text-xl font-headline font-semibold",
@@ -40,7 +40,7 @@ export function Events() {
       day_today: "bg-accent text-accent-foreground",
       day_outside: "text-muted-foreground opacity-50",
       day_disabled: "text-muted-foreground opacity-50",
-      day_selected: "bg-primary text-primary-foreground hover:bg-primary/90 focus:bg-primary/90",
+      day_selected: "bg-primary text-primary-foreground rounded-full hover:bg-primary/90 focus:bg-primary/90",
   }
 
 
@@ -69,29 +69,29 @@ export function Events() {
 
           <Carousel className="w-full">
             <CarouselContent>
-              <CarouselItem>
+              <CarouselItem className="flex justify-center">
                 <Calendar
                   numberOfMonths={6}
                   month={new Date(year, 0, 1)}
                   modifiers={{ highlighted: yearEvents }}
                   modifiersClassNames={{
-                    highlighted: 'bg-primary text-primary-foreground',
+                    highlighted: 'bg-primary text-primary-foreground rounded-full',
                   }}
                   onMonthChange={() => {}}
-                  className="p-0 w-full"
+                  className="p-0"
                   classNames={calendarClassNames}
                 />
               </CarouselItem>
-              <CarouselItem>
+              <CarouselItem className="flex justify-center">
                 <Calendar
                   numberOfMonths={6}
                   month={new Date(year, 6, 1)}
                   modifiers={{ highlighted: yearEvents }}
                   modifiersClassNames={{
-                    highlighted: 'bg-primary text-primary-foreground',
+                    highlighted: 'bg-primary text-primary-foreground rounded-full',
                   }}
                   onMonthChange={() => {}}
-                  className="p-0 w-full"
+                  className="p-0"
                   classNames={calendarClassNames}
                 />
               </CarouselItem>
