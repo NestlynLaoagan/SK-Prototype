@@ -4,13 +4,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -27,8 +29,13 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 const formSchema = z.object({
+  birthdate: z.date({
+    required_error: "A date of birth is required.",
+  }),
   gender: z.enum(["male", "female"], {
     required_error: "You need to select a gender.",
   }),
@@ -51,6 +58,7 @@ export function ProfileForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [showSpecialNeeds, setShowSpecialNeeds] = useState(false);
+  const [age, setAge] = useState<number | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -59,8 +67,22 @@ export function ProfileForm() {
     }
   });
 
+  const birthdate = form.watch("birthdate");
+
+  useEffect(() => {
+    if (birthdate) {
+        const today = new Date();
+        let calculatedAge = today.getFullYear() - birthdate.getFullYear();
+        const m = today.getMonth() - birthdate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthdate.getDate())) {
+            calculatedAge--;
+        }
+        setAge(calculatedAge);
+    }
+  }, [birthdate]);
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    console.log({...values, age});
     toast({
       title: "Profile Updated!",
       description: "Your information has been saved successfully.",
@@ -79,6 +101,55 @@ export function ProfileForm() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <FormField
+                    control={form.control}
+                    name="birthdate"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-col pt-2">
+                        <FormLabel>Date of birth</FormLabel>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                            <FormControl>
+                                <Button
+                                variant={"outline"}
+                                className={cn(
+                                    "w-full pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                )}
+                                >
+                                {field.value ? (
+                                    format(field.value, "PPP")
+                                ) : (
+                                    <span>Pick a date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                            </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) =>
+                                date > new Date() || date < new Date("1900-01-01")
+                                }
+                                initialFocus
+                            />
+                            </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <FormItem>
+                    <FormLabel>Age</FormLabel>
+                    <FormControl>
+                        <Input placeholder="Your age" value={age === null ? '' : age} disabled />
+                    </FormControl>
+                </FormItem>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormField
                     control={form.control}
@@ -224,7 +295,7 @@ export function ProfileForm() {
                     )}
                 />
             )}
-            <Button type="submit" size="lg" className="text-lg">Sign In</Button>
+            <Button type="submit" size="lg" className="text-lg">Update Profile</Button>
           </form>
         </Form>
       </CardContent>
