@@ -36,12 +36,11 @@ export function Events() {
                 month={month}
                 modifiers={{ highlighted: events }}
                 modifiersClassNames={{
-                    highlighted: 'bg-primary/20 rounded-full',
+                    highlighted: 'bg-primary text-primary-foreground rounded-full',
                 }}
                 className="p-0"
                 classNames={{
                     caption_label: "font-headline",
-                    head_cell: "w-full",
                 }}
                 onMonthChange={(m) => {}} // prevent month change within calendar
             />
