@@ -1,0 +1,185 @@
+/**
+ * Core Philosophy: This ruleset implements a hybrid security model designed for the BarangayConnect application.
+ * It combines strict path-based ownership for all user-specific data with a global role-based system for administrative actions.
+ * Publicly consumed data like projects, events, and announcements are readable by anyone, but can only be managed by administrators.
+ *
+ * Data Structure: User-centric data is segregated into the `/users/{userId}` path, with private subcollections like `settings`
+ * and `feedback` nested within. Top-level collections such as `/projects`, `/events`, and `/announcements` store public community data.
+ * A special `/roles_admin/{userId}` collection serves as a lookup table to grant administrative privileges across the application.
+ *
+ * Key Security Decisions:
+ * - Admin Rights: Administrator status is not stored on the user document. Instead, it is conferred by the existence of a
+ *   document in the `/roles_admin/{userId}` collection. This is a secure and performant pattern for managing global roles.
+ * - User Privacy: Listing the top-level `/users` collection is explicitly disallowed to prevent user enumeration and protect PII.
+ *   Users can only access their own document and subcollections.
+ * - Public vs. Private: Public-facing content (projects, events, announcements) is structurally segregated from private user data.
+ *   This simplifies rules for read access and prevents accidental data leakage.
+ * - Default Posture: The default security posture is to deny access. Permissions are granted explicitly for each path and operation.
+ *
+ * Denormalization for Authorization:
+ * - The primary denormalization strategy is the `/roles_admin/{userId}` collection. This avoids slow and costly `get()` calls to a
+ *   user's profile to check an `isAdmin` flag, enabling a simple and fast `exists()` check in any rule.
+ * - User-owned documents in subcollections (e.g., `feedback`, `settings`) contain a denormalized `userId` field. This allows rules
+ *   to enforce relational integrity on document creation and immutability on update, ensuring data cannot be re-associated with a
+ *   different user.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------------------------------------------------
+    // Helper Functions
+    // ----------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the requesting user's UID matches the provided userId.
+     * This is the foundation of the user-ownership model.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks if a document at the given path exists.
+     * Used to verify admin status from the `roles_admin` collection.
+     */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+    
+    /**
+     * Ensures a document already exists before allowing an update or delete.
+     * Prevents operations on non-existent documents.
+     */
+    function isExistingDoc() {
+      return resource != null;
+    }
+
+    // ----------------------------------------------------------------------
+    // User Data Collections
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Manages user profile data.
+     * @path /users/{userId}
+     * @allow (create) An authenticated user creating their own user document for the first time.
+     * @allow (get, update, delete) The document owner reading, modifying, or deleting their own profile.
+     * @deny (list) Any user, including the owner, listing all documents in the /users collection.
+     * @deny (get) A user trying to read another user's profile.
+     * @principle Restricts access to a user's own data tree and prevents user enumeration.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isOwner(userId) && isExistingDoc() && request.resource.data.id == resource.data.id;
+      allow delete: if isOwner(userId) && isExistingDoc();
+
+      /**
+       * @description Manages user-specific settings.
+       * @path /users/{userId}/settings/{settingsId}
+       * @allow (create, get, list, update, delete) The parent document owner managing their own settings.
+       * @deny (any) Another user attempting to access someone else's settings.
+       * @principle Enforces path-based ownership for nested private data.
+       */
+      match /settings/{settingsId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isOwner(userId) && isExistingDoc() && request.resource.data.userId == resource.data.userId;
+        allow delete: if isOwner(userId) && isExistingDoc();
+      }
+
+      /**
+       * @description Manages user-submitted feedback.
+       * @path /users/{userId}/feedback/{feedbackId}
+       * @allow (create, get, list, update, delete) The parent document owner managing their own feedback.
+       * @deny (any) Another user attempting to access someone else's feedback.
+       * @principle Enforces path-based ownership for nested private data.
+       */
+      match /feedback/{feedbackId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isOwner(userId) && isExistingDoc() && request.resource.data.userId == resource.data.userId;
+        allow delete: if isOwner(userId) && isExistingDoc();
+      }
+    }
+
+    // ----------------------------------------------------------------------
+    // Administrative and Global Collections
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Stores application role definitions (e.g., 'Admin', 'Member').
+     * @path /roles/{roleId}
+     * @allow (get, list) Any authenticated user reading the available role definitions.
+     * @allow (create, update, delete) An admin managing the role definitions.
+     * @deny (write) A non-admin user trying to modify roles.
+     * @principle Provides read-only access to configuration data for clients, while restricting writes to admins.
+     */
+    match /roles/{roleId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Grants admin privileges. Existence of a document here makes the user an admin.
+     * @path /roles_admin/{userId}
+     * @allow (any) An admin reading or managing the list of other admins.
+     * @deny (any) A non-admin user trying to read or modify the admin list.
+     * @principle Uses document existence, not content, for efficient and secure role checking.
+     */
+    match /roles_admin/{userId} {
+      allow get, list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Stores details about community projects.
+     * @path /projects/{projectId}
+     * @allow (get, list) Any user, including unauthenticated ones, viewing project details.
+     * @allow (create, update, delete) An admin managing project listings.
+     * @deny (write) A non-admin user trying to create or modify a project.
+     * @principle Allows public read access for community information while centralizing content management under admins.
+     */
+    match /projects/{projectId} {
+      allow get, list: if true;
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin() && isExistingDoc();
+    }
+
+    /**
+     * @description Stores details about community events.
+     * @path /events/{eventId}
+     * @allow (get, list) Any user, including unauthenticated ones, viewing event details.
+     * @allow (create, update, delete) An admin managing event listings.
+     * @deny (write) A non-admin user trying to create or modify an event.
+     * @principle Allows public read access for community information while centralizing content management under admins.
+     */
+    match /events/{eventId} {
+      allow get, list: if true;
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin() && isExistingDoc();
+    }
+
+    /**
+     * @description Stores barangay announcements.
+     * @path /announcements/{announcementId}
+     * @allow (get, list) Any user, including unauthenticated ones, viewing announcements.
+     * @allow (create, update, delete) An admin managing announcements.
+     * @deny (write) A non-admin user trying to create or modify an announcement.
+     * @principle Allows public read access for community information while centralizing content management under admins.
+     */
+    match /announcements/{announcementId} {
+      allow get, list: if true;
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin() && isExistingDoc();
+    }
+  }
+}
