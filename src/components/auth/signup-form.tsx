@@ -56,6 +56,15 @@ export function SignupForm() {
   const isLoading = form.formState.isSubmitting;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (values.email === 'SkAdmin@372822023') {
+        toast({
+            variant: "destructive",
+            title: "Cannot Register",
+            description: "This email is reserved. Please use the Admin login tab.",
+        });
+        return;
+    }
+    
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
@@ -65,28 +74,19 @@ export function SignupForm() {
       });
 
       const userDocRef = doc(firestore, "users", user.uid);
-      const userRole = values.email === 'SkAdmin@372822023' ? 'admin' : 'member';
 
       await setDoc(userDocRef, {
         id: user.uid,
         fullName: values.fullName,
         email: values.email,
-        role: userRole,
+        role: 'member',
       });
       
-      if (userRole === 'admin') {
-        toast({
-          title: "Admin Account Created!",
-          description: "You can now log in using the Admin tab.",
-        });
-        router.push("/login");
-      } else {
-        toast({
-          title: "Account Created!",
-          description: "Welcome! Please complete your profile.",
-        });
-        router.push("/profile");
-      }
+      toast({
+        title: "Account Created!",
+        description: "Welcome! Please complete your profile.",
+      });
+      router.push("/profile");
 
     } catch (error: any) {
       console.error("Signup failed:", error);
