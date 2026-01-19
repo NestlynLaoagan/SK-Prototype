@@ -64,19 +64,28 @@ export function SignupForm() {
       });
 
       const userDocRef = doc(firestore, "users", user.uid);
+      const userRole = values.email === 'SkAdmin@372822023' ? 'admin' : 'member';
+
       await setDoc(userDocRef, {
         id: user.uid,
         fullName: values.fullName,
         email: values.email,
-        role: 'member',
+        role: userRole,
       });
       
-      toast({
-        title: "Account Created!",
-        description: "Welcome! Please complete your profile.",
-      });
-
-      router.push("/profile");
+      if (userRole === 'admin') {
+        toast({
+          title: "Admin Account Created!",
+          description: "You can now log in using the Admin tab.",
+        });
+        router.push("/login");
+      } else {
+        toast({
+          title: "Account Created!",
+          description: "Welcome! Please complete your profile.",
+        });
+        router.push("/profile");
+      }
 
     } catch (error: any) {
       console.error("Signup failed:", error);
@@ -196,5 +205,3 @@ export function SignupForm() {
     </Card>
   );
 }
-
-    

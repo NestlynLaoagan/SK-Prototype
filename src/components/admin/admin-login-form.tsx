@@ -43,44 +43,32 @@ export function AdminLoginForm() {
   const isLoading = form.formState.isSubmitting;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (values.username === "SkAdmin@372822023" && values.password === "HPGMHVXBCCX23") {
-      try {
-        // We use the username as the email for Firebase Auth, assuming it's a valid credential there.
-        const userCredential = await signInWithEmailAndPassword(auth, values.username, values.password);
-        const user = userCredential.user;
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, values.username, values.password);
+      const user = userCredential.user;
 
-        const userDocRef = doc(firestore, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
+      const userDocRef = doc(firestore, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
 
-        if (userDoc.exists() && userDoc.data().role === 'admin') {
-          toast({
-            title: "Login Successful",
-            description: "Welcome, Admin!",
-          })
-          router.push("/admin")
-        } else {
-          // This case handles if the user exists in Auth but not in Firestore as an admin
-          await auth.signOut();
-          toast({
-            variant: "destructive",
-            title: "Access Denied",
-            description: "You do not have administrative privileges.",
-          });
-        }
-      } catch (error) {
-         // This handles Firebase Auth errors (e.g., user not found, wrong password)
-         toast({
-            variant: "destructive",
-            title: "Authentication Failed",
-            description: "Invalid admin credentials or user not found in Firebase.",
-          });
-      }
-    } else {
-        // This handles if the username/password don't match the hardcoded values
+      if (userDoc.exists() && userDoc.data().role === 'admin') {
         toast({
-            variant: "destructive",
-            title: "Login Failed",
-            description: "Invalid username or password.",
+          title: "Login Successful",
+          description: "Welcome, Admin!",
+        })
+        router.push("/admin")
+      } else {
+        await auth.signOut();
+        toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: "You do not have administrative privileges.",
+        });
+      }
+    } catch (error) {
+       toast({
+          variant: "destructive",
+          title: "Authentication Failed",
+          description: "Invalid username or password.",
         });
     }
   }
