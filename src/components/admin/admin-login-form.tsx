@@ -18,15 +18,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { PasswordInput } from "../ui/password-input"
 
 const formSchema = z.object({
-  username: z.string().min(1, "Username is required."),
   password: z.string().min(1, "Password is required."),
 })
+
+const ADMIN_USERNAME = "SkAdmin@372822023";
 
 export function AdminLoginForm() {
   const router = useRouter()
@@ -36,7 +36,6 @@ export function AdminLoginForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "SkAdmin@372822023",
       password: "HPGMHVXBCCX23",
     },
   })
@@ -64,8 +63,7 @@ export function AdminLoginForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      // Try to sign in first
-      const userCredential = await signInWithEmailAndPassword(auth, values.username, values.password);
+      const userCredential = await signInWithEmailAndPassword(auth, ADMIN_USERNAME, values.password);
       const user = userCredential.user;
 
       const userDocRef = doc(firestore, "users", user.uid);
@@ -77,10 +75,9 @@ export function AdminLoginForm() {
         handleAccessDenied();
       }
     } catch (error: any) {
-      // If user is not found, create the admin user
       if (error.code === 'auth/user-not-found') {
         try {
-          const newUserCredential = await createUserWithEmailAndPassword(auth, values.username, values.password);
+          const newUserCredential = await createUserWithEmailAndPassword(auth, ADMIN_USERNAME, values.password);
           const newUser = newUserCredential.user;
           
           await updateProfile(newUser, { displayName: 'SK Admin' });
@@ -89,7 +86,7 @@ export function AdminLoginForm() {
           await setDoc(userDocRef, {
             id: newUser.uid,
             fullName: "SK Admin",
-            email: values.username,
+            email: ADMIN_USERNAME,
             role: 'admin',
           });
 
@@ -106,7 +103,7 @@ export function AdminLoginForm() {
          toast({
             variant: "destructive",
             title: "Authentication Failed",
-            description: "Invalid username or password.",
+            description: "Invalid password.",
           });
       } else {
          toast({
@@ -122,24 +119,11 @@ export function AdminLoginForm() {
       <Card>
         <CardHeader>
           <CardTitle>Admin Panel</CardTitle>
-          <CardDescription>Enter your administrator credentials to continue</CardDescription>
+          <CardDescription>Enter the administrator password to continue</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="SkAdmin@..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={form.control}
                 name="password"
