@@ -26,7 +26,8 @@ const formSchema = z.object({
   password: z.string().min(1, "Password is required."),
 })
 
-const ADMIN_USERNAME = "SkAdmin@372822023";
+// Use a unique, non-public email for the admin user
+const ADMIN_EMAIL = "barangay.admin.connect@system.local";
 
 export function AdminLoginForm() {
   const router = useRouter()
@@ -47,7 +48,8 @@ export function AdminLoginForm() {
       title: "Login Successful",
       description: "Welcome, Admin!",
     })
-    router.push("/admin")
+    // Use replace to prevent going back to the login page
+    router.replace("/admin")
   }
 
   const handleAccessDenied = async () => {
@@ -63,7 +65,7 @@ export function AdminLoginForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, ADMIN_USERNAME, values.password);
+      const userCredential = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, values.password);
       const user = userCredential.user;
 
       const userDocRef = doc(firestore, "users", user.uid);
@@ -72,28 +74,31 @@ export function AdminLoginForm() {
       if (userDoc.exists() && userDoc.data().role === 'admin') {
         handleSuccessfulAdminLogin();
       } else {
+        // This case handles if the auth user exists but has no/wrong role in Firestore.
         handleAccessDenied();
       }
     } catch (error: any) {
       if (error.code === 'auth/user-not-found') {
+        // If the admin user doesn't exist, create it.
         try {
-          const newUserCredential = await createUserWithEmailAndPassword(auth, ADMIN_USERNAME, values.password);
+          const newUserCredential = await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, values.password);
           const newUser = newUserCredential.user;
           
           await updateProfile(newUser, { displayName: 'SK Admin' });
 
           const userDocRef = doc(firestore, "users", newUser.uid);
+          // Await setDoc to ensure the user profile is created before proceeding
           await setDoc(userDocRef, {
             id: newUser.uid,
             fullName: "SK Admin",
-            email: ADMIN_USERNAME,
+            email: ADMIN_EMAIL,
             role: 'admin',
           });
 
           handleSuccessfulAdminLogin();
 
         } catch (createError: any) {
-          toast({
+           toast({
             variant: "destructive",
             title: "Admin Setup Failed",
             description: `Could not create admin account: ${createError.message}`,

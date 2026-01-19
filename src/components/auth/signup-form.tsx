@@ -56,11 +56,11 @@ export function SignupForm() {
   const isLoading = form.formState.isSubmitting;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (values.email === 'SkAdmin@372822023') {
+    if (values.email === 'barangay.admin.connect@system.local') {
         toast({
             variant: "destructive",
             title: "Cannot Register",
-            description: "This email is reserved. Please use the Admin login tab.",
+            description: "This email is reserved for administration. Please use the Admin login tab.",
         });
         return;
     }
