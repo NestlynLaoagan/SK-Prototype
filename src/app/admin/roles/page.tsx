@@ -8,6 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type User = {
     id: number;
@@ -22,23 +32,62 @@ const initialUsers: User[] = [
     { id: 3, name: "Crisostomo Ibarra", username: "crisostomo", role: "Member" },
 ];
 
+const ADMIN_PASSWORD = "HPGMHVXBCCX23";
+
 export default function RolesPage() {
   const [users, setUsers] = useState<User[]>(initialUsers);
+  const [userToUpdate, setUserToUpdate] = useState<number | null>(null);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
   const { toast } = useToast();
 
   const handleRoleChange = (userId: number, role: "Member" | "Admin") => {
     setUsers(users.map(user => user.id === userId ? { ...user, role } : user));
   };
 
-  const handleSaveChanges = (userId: number) => {
-    const user = users.find(u => u.id === userId);
-    toast({
-      title: "Role Saved",
-      description: `Role for ${user?.name} has been updated to ${user?.role}.`,
-    });
-    // In a real app, you would make an API call here.
-    // The user also mentioned password verification, which would be implemented here.
+  const handleSaveClick = (userId: number) => {
+    setUserToUpdate(userId);
+    setIsAlertOpen(true);
   };
+
+  const handleConfirmRoleChange = () => {
+    if (adminPassword !== ADMIN_PASSWORD) {
+        toast({
+            title: "Verification Failed",
+            description: "Incorrect admin password. Role change was not saved.",
+            variant: "destructive",
+        });
+    } else {
+        if (userToUpdate !== null) {
+            const user = users.find(u => u.id === userToUpdate);
+            toast({
+                title: "Role Saved",
+                description: `Role for ${user?.name} has been updated to ${user?.role}.`,
+            });
+            // In a real app, you would make an API call here.
+        }
+    }
+    // Reset state and close dialog
+    setAdminPassword("");
+    setUserToUpdate(null);
+    setIsAlertOpen(false);
+  };
+
+  const handleCancelRoleChange = () => {
+    // Reset state and close dialog
+    setAdminPassword("");
+    setUserToUpdate(null);
+    setIsAlertOpen(false);
+  }
+
+  const handleOpenChange = (open: boolean) => {
+      setIsAlertOpen(open);
+      if (!open) {
+        // Reset state if dialog is closed without action
+        setAdminPassword("");
+        setUserToUpdate(null);
+      }
+  }
 
 
   return (
@@ -84,7 +133,7 @@ export default function RolesPage() {
                                 </Select>
                             </TableCell>
                             <TableCell className="text-right">
-                                <Button onClick={() => handleSaveChanges(user.id)}>Save</Button>
+                                <Button onClick={() => handleSaveClick(user.id)}>Save</Button>
                             </TableCell>
                         </TableRow>
                     ))}
@@ -92,6 +141,30 @@ export default function RolesPage() {
             </Table>
         </CardContent>
       </Card>
+      <AlertDialog open={isAlertOpen} onOpenChange={handleOpenChange}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Admin Verification Required</AlertDialogTitle>
+                <AlertDialogDescription>
+                    To save this role change, please enter the administrator password.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="py-4">
+                <Input
+                    id="admin-password"
+                    type="password"
+                    placeholder="Admin Password"
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleConfirmRoleChange()}
+                />
+            </div>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={handleCancelRoleChange}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleConfirmRoleChange}>Confirm</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
     </div>
   );
 }
