@@ -38,7 +38,6 @@ export function Events() {
                 modifiersClassNames={{
                     highlighted: 'bg-primary/20 rounded-full',
                 }}
-                selected={events}
                 className="p-0"
                 classNames={{
                     caption_label: "font-headline",

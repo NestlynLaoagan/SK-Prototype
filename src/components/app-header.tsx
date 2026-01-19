@@ -14,7 +14,6 @@ export function AppHeader() {
                 <li><a href="#projects" className="text-muted-foreground transition-colors hover:text-foreground">Projects</a></li>
                 <li><a href="#events" className="text-muted-foreground transition-colors hover:text-foreground">Events</a></li>
                 <li><a href="#feedback" className="text-muted-foreground transition-colors hover:text-foreground">Feedback</a></li>
-                <li><Link href="/admin/login" className="text-muted-foreground transition-colors hover:text-foreground">Admin</Link></li>
             </ul>
         </nav>
         <div className="flex items-center space-x-2">

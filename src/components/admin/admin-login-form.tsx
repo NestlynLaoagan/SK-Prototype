@@ -49,13 +49,9 @@ export function AdminLoginForm() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-                <Logo />
-            </div>
-          <CardTitle className="text-2xl font-headline">Admin Panel</CardTitle>
+      <Card>
+        <CardHeader>
+          <CardTitle>Admin Panel</CardTitle>
           <CardDescription>Enter your administrator credentials to continue</CardDescription>
         </CardHeader>
         <CardContent>
@@ -94,6 +90,5 @@ export function AdminLoginForm() {
           </Form>
         </CardContent>
       </Card>
-    </div>
   )
 }
