@@ -52,7 +52,9 @@ export function AdminLoginForm() {
   }
 
   const handleAccessDenied = async () => {
-    await auth.signOut();
+    if (auth.currentUser) {
+      await auth.signOut();
+    }
     toast({
       variant: "destructive",
       title: "Access Denied",
