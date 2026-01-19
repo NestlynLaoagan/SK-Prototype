@@ -9,11 +9,10 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupLabel
 } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Home, FolderKanban, Calendar, MessageSquareQuote, Users, Settings, LogOut } from "lucide-react"
+import { Home, FolderKanban, Calendar, MessageSquareQuote, Users, Settings, LogOut, Bot, UserCog } from "lucide-react"
 import { Logo } from "../logo"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -38,6 +37,14 @@ export function AdminSidebar() {
                 <SidebarMenuButton isActive={pathname === '/admin'} tooltip="Dashboard">
                     <Home />
                     <span>Dashboard</span>
+                </SidebarMenuButton>
+            </Link>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <Link href="/admin/profiles">
+                <SidebarMenuButton isActive={pathname.startsWith('/admin/profiles')} tooltip="Profile Summary">
+                    <Users />
+                    <span>Profile Summary</span>
                 </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
@@ -68,8 +75,16 @@ export function AdminSidebar() {
           <SidebarMenuItem>
              <Link href="/admin/roles">
                 <SidebarMenuButton isActive={pathname.startsWith('/admin/roles')} tooltip="Role Management">
-                    <Users />
+                    <UserCog />
                     <span>Role Management</span>
+                </SidebarMenuButton>
+            </Link>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+             <Link href="/admin/chatbot">
+                <SidebarMenuButton isActive={pathname.startsWith('/admin/chatbot')} tooltip="Chatbot">
+                    <Bot />
+                    <span>Chatbot</span>
                 </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>

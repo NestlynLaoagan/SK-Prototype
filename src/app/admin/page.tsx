@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FolderKanban, Calendar, Users, Megaphone } from "lucide-react";
-import { FeedbackAnalysis } from "@/components/admin/feedback-analysis";
 
 export default function AdminDashboardPage() {
     const stats = [
@@ -29,10 +28,6 @@ export default function AdminDashboardPage() {
                         </CardContent>
                     </Card>
                 ))}
-            </div>
-
-            <div>
-                <FeedbackAnalysis />
             </div>
         </div>
     )
