@@ -65,6 +65,7 @@ export function AdminLoginForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      // First, try to sign in
       const userCredential = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, values.password);
       const user = userCredential.user;
 
@@ -74,12 +75,14 @@ export function AdminLoginForm() {
       if (userDoc.exists() && userDoc.data().role === 'admin') {
         handleSuccessfulAdminLogin();
       } else {
-        // This case handles if the auth user exists but has no/wrong role in Firestore.
+        // User exists in Auth but not as admin in Firestore
         handleAccessDenied();
       }
-    } catch (error: any) {
-      if (error.code === 'auth/user-not-found') {
-        // If the admin user doesn't exist, create it.
+    } catch (signInError: any) {
+      // If sign-in fails, it might be because the user doesn't exist, or the password is wrong.
+      // Firebase's `auth/invalid-credential` error covers both cases.
+      if (signInError.code === 'auth/invalid-credential') {
+        // Let's try to create the admin user. This will only succeed if the user does not already exist.
         try {
           const newUserCredential = await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, values.password);
           const newUser = newUserCredential.user;
@@ -87,7 +90,6 @@ export function AdminLoginForm() {
           await updateProfile(newUser, { displayName: 'SK Admin' });
 
           const userDocRef = doc(firestore, "users", newUser.uid);
-          // Await setDoc to ensure the user profile is created before proceeding
           await setDoc(userDocRef, {
             id: newUser.uid,
             fullName: "SK Admin",
@@ -95,26 +97,33 @@ export function AdminLoginForm() {
             role: 'admin',
           });
 
+          // If creation is successful, log them in
           handleSuccessfulAdminLogin();
 
         } catch (createError: any) {
-           toast({
-            variant: "destructive",
-            title: "Admin Setup Failed",
-            description: `Could not create admin account: ${createError.message}`,
-          });
+          // If creating the user fails, it's most likely because the email is already in use,
+          // which means the password provided in the initial sign-in attempt was incorrect.
+          if (createError.code === 'auth/email-already-in-use') {
+             toast({
+                variant: "destructive",
+                title: "Authentication Failed",
+                description: "Invalid password.",
+              });
+          } else {
+             // Handle other potential errors during user creation
+             toast({
+                variant: "destructive",
+                title: "Admin Setup Failed",
+                description: `Could not create admin account: ${createError.message}`,
+              });
+          }
         }
-      } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-         toast({
-            variant: "destructive",
-            title: "Authentication Failed",
-            description: "Invalid password.",
-          });
       } else {
+        // Handle other sign-in errors (e.g., network issues)
          toast({
             variant: "destructive",
             title: "An Error Occurred",
-            description: error.message || "An unknown error occurred during login.",
+            description: signInError.message || "An unknown error occurred during login.",
         });
       }
     }
