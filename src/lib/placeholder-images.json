@@ -1,3 +1,34 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "project-1",
+      "description": "Community pantry initiative providing essential goods to residents.",
+      "imageUrl": "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjb21tdW5pdHklMjBldmVudHxlbnwwfHx8fDE3Njg4Mjg0NDV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "community event"
+    },
+    {
+      "id": "project-2",
+      "description": "Tree planting activity to promote environmental awareness and green spaces.",
+      "imageUrl": "https://images.unsplash.com/photo-1741004421177-9a1b834838cb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxuYXR1cmUlMjBlbnZpcm9ubWVudHxlbnwwfHx8fDE3Njg4Mzk4NjJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "nature environment"
+    },
+    {
+      "id": "project-3",
+      "description": "Youth basketball league fostering sportsmanship and camaraderie.",
+      "imageUrl": "https://images.unsplash.com/photo-1591103877275-f62e20079e47?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxiYXNrZXRiYWxsJTIwc3BvcnR8ZW58MHx8fHwxNzY4ODM5ODYxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "basketball sport"
+    },
+    {
+      "id": "project-4",
+      "description": "Barangay-wide cleanup drive for a cleaner and healthier community.",
+      "imageUrl": "https://images.unsplash.com/photo-1758599669016-acedd3942ca2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx2b2x1bnRlZXJzJTIwY2xlYW5pbmd8ZW58MHx8fHwxNzY4ODM5ODYyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "volunteers cleaning"
+    },
+    {
+      "id": "project-5",
+      "description": "Free medical mission offering health check-ups and consultations.",
+      "imageUrl": "https://images.unsplash.com/photo-1667401604586-1d68d9788e09?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtZWRpY2FsJTIwbWlzc2lvbnxlbnwwfHx8fDE3Njg4Mzk4NjF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "medical mission"
+    }
+  ]
 }
