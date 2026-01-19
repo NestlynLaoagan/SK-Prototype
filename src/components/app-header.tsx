@@ -12,8 +12,8 @@ export function AppHeader() {
             <ul className="hidden md:flex flex-1 justify-center items-center space-x-8 text-sm font-medium">
                 <li><a href="#home" className="text-muted-foreground transition-colors hover:text-foreground">Home</a></li>
                 <li><a href="#projects" className="text-muted-foreground transition-colors hover:text-foreground">Projects</a></li>
-                <li><a href="#events" className="text-muted-foreground transition-colors hover:text-foreground">Events</a></li>
                 <li><a href="#announcements" className="text-muted-foreground transition-colors hover:text-foreground">Announcements</a></li>
+                <li><a href="#events" className="text-muted-foreground transition-colors hover:text-foreground">Events</a></li>
                 <li><a href="#feedback" className="text-muted-foreground transition-colors hover:text-foreground">Feedback</a></li>
             </ul>
         </nav>

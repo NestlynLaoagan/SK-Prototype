@@ -38,7 +38,6 @@ export default function HomePage() {
       <main className="flex-1">
         <Hero />
         <Projects />
-        <Events />
         <section id="announcements" className="w-full py-16 md:py-24 lg:py-32 bg-secondary/50">
           <div className="container mx-auto flex flex-col items-center justify-center gap-8 px-4 md:px-6">
             <div className="flex flex-col items-center text-center space-y-3">
@@ -68,6 +67,7 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+        <Events />
         <Feedback />
       </main>
       <IskaiChatbot />
