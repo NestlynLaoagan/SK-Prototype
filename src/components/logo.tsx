@@ -3,7 +3,7 @@ import Link from 'next/link';
 export function Logo() {
   return (
     <Link href="/home" className="flex items-center gap-3">
-      <div className="flex items-center justify-center size-14 text-primary">
+      <div className="flex items-center justify-center size-14">
         <svg
           width="100%"
           height="100%"
@@ -25,27 +25,53 @@ export function Logo() {
             cx="50"
             cy="50"
             r="48"
-            stroke="currentColor"
+            stroke="#16a34a"
             strokeWidth="4"
-            fill="none"
+            fill="#16a34a"
           />
-          <text fill="currentColor" fontSize="9" fontWeight="bold" letterSpacing="0.5">
+           <circle
+            cx="50"
+            cy="50"
+            r="42"
+            fill="white"
+          />
+           <circle
+            cx="50"
+            cy="50"
+            r="36"
+            fill="#facc15"
+          />
+          <text fill="white" fontSize="9" fontWeight="bold" letterSpacing="0.5">
             <textPath href="#circlePath" startOffset="50%" textAnchor="middle">
-              SANGGUNIANG KABATAAN • BAKAKENG CENTRAL
+              SANGGUNIANG KABATAAN
             </textPath>
           </text>
           
-          <text 
-            x="50" 
-            y="58" 
-            textAnchor="middle" 
-            fontSize="40" 
-            fontWeight="bold"
-            fontFamily="monospace"
-            fill="currentColor"
-          >
-            SK
-          </text>
+          <g>
+            <text 
+              x="36" 
+              y="62" 
+              textAnchor="middle" 
+              fontSize="36" 
+              fontWeight="bold"
+              fontFamily="sans-serif"
+              fill="#0054A6"
+              style={{fontStyle: 'italic'}}
+            >
+              S
+            </text>
+            <text 
+              x="64" 
+              y="62" 
+              textAnchor="middle" 
+              fontSize="36" 
+              fontWeight="bold"
+              fontFamily="sans-serif"
+              fill="#D41E24"
+            >
+              K
+            </text>
+          </g>
         </svg>
       </div>
        <div className="flex flex-col">
