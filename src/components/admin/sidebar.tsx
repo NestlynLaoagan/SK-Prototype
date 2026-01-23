@@ -7,44 +7,42 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
 } from "@/components/ui/sidebar"
-import { Separator } from "@/components/ui/separator"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Home, FolderKanban, Calendar, MessageSquareQuote, Users, Settings, LogOut, Bot, UserCog } from "lucide-react"
-import { Logo } from "../logo"
+import { Home, FolderKanban, Calendar, MessageSquareQuote, Users, Bot, Shield } from "lucide-react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 
 export function AdminSidebar() {
     const pathname = usePathname();
-    const router = useRouter();
-
-    const handleSignOut = () => {
-        router.push('/login');
-    }
 
   return (
     <Sidebar variant="sidebar" collapsible="icon">
       <SidebarHeader>
-        <Logo />
+        <Link href="/admin">
+            <div className="flex h-20 items-center justify-center p-2">
+                <div className="flex flex-col text-center">
+                    <span className="font-headline text-lg font-bold leading-tight text-sidebar-foreground">BARANGAY</span>
+                    <span className="font-headline text-lg font-bold leading-tight text-sidebar-foreground">BAKAKENG</span>
+                    <span className="font-headline text-lg font-bold leading-tight text-sidebar-foreground">CENTRAL</span>
+                </div>
+            </div>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
           <SidebarMenuItem>
             <Link href="/admin">
-                <SidebarMenuButton isActive={pathname === '/admin'} tooltip="Dashboard">
+                <SidebarMenuButton isActive={pathname === '/admin'} tooltip="Home">
                     <Home />
-                    <span>Dashboard</span>
+                    <span>Home</span>
                 </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <Link href="/admin/profiles">
-                <SidebarMenuButton isActive={pathname.startsWith('/admin/profiles')} tooltip="Profile Summary">
+                <SidebarMenuButton isActive={pathname.startsWith('/admin/profiles')} tooltip="Profiling Summary">
                     <Users />
-                    <span>Profile Summary</span>
+                    <span>Profiling Summary</span>
                 </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
@@ -72,56 +70,24 @@ export function AdminSidebar() {
                 </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
-          <SidebarMenuItem>
-             <Link href="/admin/roles">
-                <SidebarMenuButton isActive={pathname.startsWith('/admin/roles')} tooltip="Role Management">
-                    <UserCog />
-                    <span>Role Management</span>
+           <SidebarMenuItem>
+             <Link href="/admin/chatbot">
+                <SidebarMenuButton isActive={pathname.startsWith('/admin/chatbot')} tooltip="AI-chatbot">
+                    <Bot />
+                    <span>AI-chatbot</span>
                 </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
-             <Link href="/admin/chatbot">
-                <SidebarMenuButton isActive={pathname.startsWith('/admin/chatbot')} tooltip="Chatbot">
-                    <Bot />
-                    <span>Chatbot</span>
+             <Link href="/admin/roles">
+                <SidebarMenuButton isActive={pathname.startsWith('/admin/roles')} tooltip="Role Management">
+                    <Shield />
+                    <span>Role Management</span>
                 </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="gap-4">
-        <Separator />
-         <SidebarMenu>
-          <SidebarMenuItem>
-             <Link href="/admin/settings">
-                <SidebarMenuButton isActive={pathname.startsWith('/admin/settings')} tooltip="Settings">
-                    <Settings />
-                    <span>Settings</span>
-                </SidebarMenuButton>
-            </Link>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleSignOut} tooltip="Sign Out">
-              <LogOut />
-              <span>Sign Out</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-        <Separator />
-        <SidebarGroup>
-          <div className="flex items-center gap-2">
-            <Avatar className="size-8">
-              <AvatarImage src="https://picsum.photos/seed/admin/100/100" data-ai-hint="person face" />
-              <AvatarFallback>A</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col text-sm">
-              <span className="font-semibold text-sidebar-foreground">SK Admin</span>
-              <span className="text-sidebar-foreground/70">Administrator</span>
-            </div>
-          </div>
-        </SidebarGroup>
-      </SidebarFooter>
     </Sidebar>
   )
 }
