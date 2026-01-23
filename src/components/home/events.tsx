@@ -62,6 +62,7 @@ export function Events() {
                                 <Card key={monthIndex} className="shadow-md">
                                     <Calendar
                                         month={month}
+                                        showOutsideDays={false}
                                         className="p-0"
                                         classNames={calendarClassNames}
                                     />
