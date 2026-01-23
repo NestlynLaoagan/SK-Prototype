@@ -7,13 +7,41 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarContent,
+  SidebarFooter,
+  SidebarSeparator,
 } from "@/components/ui/sidebar"
-import { Home, FolderKanban, Calendar, MessageSquareQuote, Users, Bot, Shield } from "lucide-react"
+import { Home, FolderKanban, Calendar, MessageSquareQuote, Users, Bot, Shield, Archive, FileText, DatabaseBackup, Cog, LogOut } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useAuth } from "@/firebase"
+import { signOut } from "firebase/auth"
+import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
 
 export function AdminSidebar() {
     const pathname = usePathname();
+    const auth = useAuth();
+    const { toast } = useToast();
+    const router = useRouter();
+
+    const handleSignOut = async () => {
+        try {
+            await signOut(auth);
+            toast({
+                title: "Signed Out",
+                description: "You have been successfully signed out.",
+            });
+            router.push('/admin/login');
+        } catch (error) {
+            console.error("Sign out failed:", error);
+            toast({
+                variant: "destructive",
+                title: "Sign Out Failed",
+                description: "Could not sign you out. Please try again.",
+            });
+        }
+    }
+
 
   return (
     <Sidebar variant="sidebar" collapsible="icon">
@@ -86,8 +114,51 @@ export function AdminSidebar() {
                 </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
+           <SidebarMenuItem>
+             <Link href="/admin/archives">
+                <SidebarMenuButton isActive={pathname.startsWith('/admin/archives')} tooltip="Archives">
+                    <Archive />
+                    <span>Archives</span>
+                </SidebarMenuButton>
+            </Link>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+             <Link href="/admin/logs">
+                <SidebarMenuButton isActive={pathname.startsWith('/admin/logs')} tooltip="Logs">
+                    <FileText />
+                    <span>Logs</span>
+                </SidebarMenuButton>
+            </Link>
+          </SidebarMenuItem>
+           <SidebarMenuItem>
+             <Link href="/admin/backup">
+                <SidebarMenuButton isActive={pathname.startsWith('/admin/backup')} tooltip="Backup & Restore">
+                    <DatabaseBackup />
+                    <span>Backup & Restore</span>
+                </SidebarMenuButton>
+            </Link>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
+       <SidebarFooter>
+            <SidebarSeparator />
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <Link href="/admin/settings">
+                        <SidebarMenuButton isActive={pathname.startsWith('/admin/settings')} tooltip="Settings">
+                            <Cog />
+                            <span>Settings</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton onClick={handleSignOut} tooltip="Sign Out">
+                        <LogOut />
+                        <span>Sign Out</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarFooter>
     </Sidebar>
   )
 }
