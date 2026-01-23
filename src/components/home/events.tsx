@@ -34,7 +34,7 @@ export function Events() {
         nav: "hidden",
         table: "w-full border-collapse p-2",
         head_row: "flex justify-around mb-1",
-        head_cell: "text-muted-foreground w-8 font-semibold text-sm uppercase",
+        head_cell: "text-muted-foreground w-8 font-semibold text-sm uppercase text-center",
         row: "flex w-full mt-2 justify-around",
         cell: "h-8 w-8 text-center text-sm p-0 relative flex items-center justify-center",
         day: "h-8 w-8 p-0 font-normal aria-selected:opacity-100",
@@ -53,11 +53,11 @@ export function Events() {
                         This calendar outlines the scheduled events at the Bakakeng Central Basketball Court
                     </p>
                 </div>
-
-                <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+                
+                <div className="flex flex-col items-center gap-16">
                     {/* Calendar Grid */}
-                    <div className="lg:col-span-8">
-                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div className="w-full max-w-6xl">
+                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                             {months.map((month, monthIndex) => (
                                 <Card key={monthIndex} className="shadow-md">
                                     <Calendar
@@ -72,9 +72,9 @@ export function Events() {
                     </div>
 
                     {/* Events List */}
-                    <div className="lg:col-span-4">
-                        <div className="space-y-8 sticky top-24">
-                           <h3 className="text-3xl font-bold text-primary font-headline">Upcoming Events</h3>
+                    <div className="w-full max-w-2xl">
+                        <div className="space-y-8">
+                           <h3 className="text-3xl font-bold text-primary font-headline text-center">Upcoming Events</h3>
                             {Object.keys(eventsByMonth).length > 0 ? (
                                 Object.entries(eventsByMonth).map(([month, events]) => (
                                     <div key={month}>
@@ -91,7 +91,7 @@ export function Events() {
                                     </div>
                                 ))
                             ) : (
-                                <p className="text-muted-foreground">No upcoming events scheduled.</p>
+                                <p className="text-muted-foreground text-center">No upcoming events scheduled.</p>
                             )}
                         </div>
                     </div>
