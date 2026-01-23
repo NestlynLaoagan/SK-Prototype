@@ -54,9 +54,9 @@ export function Events() {
                     </p>
                 </div>
                 
-                <div className="flex flex-col items-center gap-16">
+                <div className="grid lg:grid-cols-10 gap-12">
                     {/* Calendar Grid */}
-                    <div className="w-full max-w-6xl">
+                    <div className="lg:col-span-7">
                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                             {months.map((month, monthIndex) => (
                                 <Card key={monthIndex} className="shadow-md">
@@ -72,8 +72,8 @@ export function Events() {
                     </div>
 
                     {/* Events List */}
-                    <div className="w-full max-w-2xl">
-                        <div className="space-y-8">
+                    <div className="lg:col-span-3">
+                        <div className="space-y-8 sticky top-24">
                            <h3 className="text-3xl font-bold text-primary font-headline text-center">Upcoming Events</h3>
                             {Object.keys(eventsByMonth).length > 0 ? (
                                 Object.entries(eventsByMonth).map(([month, events]) => (
