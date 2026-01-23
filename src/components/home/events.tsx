@@ -61,12 +61,12 @@ export function Events() {
         caption_label: "text-base font-medium uppercase w-full bg-primary text-primary-foreground py-2.5 rounded-t-md text-center",
         nav: "hidden",
         table: "w-full border-collapse p-2",
-        head_row: "flex justify-around mb-1",
+        head_row: "",
         head_cell: "text-muted-foreground w-9 font-semibold text-[0.8rem] uppercase text-center",
-        row: "flex w-full mt-2 justify-around",
-        cell: "h-9 w-9 text-center text-sm p-0 relative flex items-center justify-center",
-        day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 flex items-center justify-center",
-        day_selected: "bg-primary/20 text-primary font-bold rounded-full",
+        row: "mt-2",
+        cell: "h-9 w-9 text-center text-sm p-0 relative",
+        day: "h-8 w-8 p-0 mx-auto font-normal aria-selected:opacity-100 rounded-full flex items-center justify-center",
+        day_selected: "bg-primary/20 text-primary font-bold",
         day_today: "bg-accent text-accent-foreground rounded-full",
         day_outside: "text-muted-foreground opacity-30",
         day_disabled: "text-muted-foreground opacity-50",
@@ -77,7 +77,7 @@ export function Events() {
     };
     
     const modifiersClassNames = {
-        event: 'bg-primary text-primary-foreground rounded-full',
+        event: 'bg-primary text-primary-foreground',
     };
 
     return (
