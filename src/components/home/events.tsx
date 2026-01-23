@@ -1,48 +1,69 @@
 "use client"
 import * as React from "react"
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
 import { Calendar } from "@/components/ui/calendar"
-import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { format } from "date-fns"
 
 // Mock events data for demonstration
 const events = [
-  new Date(new Date().getFullYear(), new Date().getMonth(), 8),
-  new Date(new Date().getFullYear(), new Date().getMonth(), 12),
-  new Date(new Date().getFullYear(), new Date().getMonth() + 1, 22),
-  new Date(new Date().getFullYear(), new Date().getMonth() + 4, 2),
-  new Date(new Date().getFullYear() + 1, 2, 15),
+  { 
+    id: 1, 
+    title: "Barangay Assembly Day", 
+    date: new Date(new Date().getFullYear(), new Date().getMonth(), 28),
+    description: "Discuss important community matters, project updates, and financial reports."
+  },
+  { 
+    id: 2, 
+    title: "Community Garden Project Launch", 
+    date: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 5),
+    description: "Volunteers are needed for the initial setup. Let's grow together!"
+  },
+  { 
+    id: 3, 
+    title: "Free Anti-Rabies Vaccination", 
+    date: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 15),
+    description: "Protect your furry friends! A free anti-rabies vaccination drive at the barangay hall."
+  },
+  { 
+    id: 4, 
+    title: "Christmas Caroling Kick-off", 
+    date: new Date(new Date().getFullYear(), 11, 16),
+    description: "Youth groups will start their house-to-house caroling to raise funds for their projects."
+  },
+  { 
+    id: 5, 
+    title: "Simbang Gabi", 
+    date: new Date(new Date().getFullYear(), 11, 24),
+    description: "Join the community for the traditional Simbang Gabi mass at the barangay chapel."
+  },
 ];
 
 export function Events() {
-  const [year, setYear] = React.useState(new Date().getFullYear());
+  const [date, setDate] = React.useState<Date | undefined>(new Date())
 
-  const yearEvents = events.filter(d => d.getFullYear() === year);
+  const highlightedDays = events.map(event => event.date);
 
   const calendarClassNames = {
-      months: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8',
-      month: 'border bg-card text-card-foreground shadow-md rounded-xl p-4 space-y-4',
-      caption: 'flex items-center justify-center relative mb-4',
-      caption_label: "text-xl font-headline font-semibold",
-      nav: "hidden",
-      table: "w-full border-collapse",
+      month: 'space-y-4',
+      caption: 'flex justify-center pt-1 relative items-center',
+      caption_label: "text-xl font-medium font-headline",
+      nav: "space-x-1 flex items-center",
+      nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+      nav_button_previous: "absolute left-1",
+      nav_button_next: "absolute right-1",
+      table: "w-full border-collapse space-y-1",
       head_row: "flex",
       head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
       row: "flex w-full mt-2",
       cell: "h-9 w-9 text-center text-sm p-0 relative",
-      day: "h-9 w-9 p-0 font-normal rounded-full aria-selected:opacity-100 transition-colors hover:bg-accent/50",
+      day: "h-9 w-9 p-0 font-normal rounded-full flex items-center justify-center aria-selected:opacity-100 transition-colors hover:bg-accent/50",
       day_today: "bg-accent text-accent-foreground",
       day_outside: "text-muted-foreground opacity-50",
       day_disabled: "text-muted-foreground opacity-50",
-      day_selected: "bg-primary text-primary-foreground rounded-full hover:bg-primary/90 focus:bg-primary/90",
+      day_selected: "bg-primary text-primary-foreground hover:bg-primary/90 focus:bg-primary/90",
+      day_highlighted: "bg-primary/20 text-primary-foreground rounded-full",
   }
-
 
   return (
     <section id="events" className="w-full py-16 md:py-24 lg:py-32 bg-secondary/50">
@@ -50,55 +71,50 @@ export function Events() {
         <div className="flex flex-col items-center text-center space-y-3">
           <h2 className="text-3xl font-headline font-bold tracking-tighter sm:text-4xl md:text-5xl">Community Events Calendar</h2>
           <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-            Stay up-to-date with all the happenings in our barangay for the entire year.
+            Stay up-to-date with all the happenings in our barangay.
           </p>
         </div>
 
-        <div className="w-full max-w-screen-xl flex flex-col items-center gap-6">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" onClick={() => setYear(year - 1)}>
-              <ChevronLeft className="h-4 w-4" />
-              <span className="sr-only">Previous year</span>
-            </Button>
-            <h3 className="text-2xl font-bold font-headline">{year}</h3>
-            <Button variant="outline" size="icon" onClick={() => setYear(year + 1)}>
-              <ChevronRight className="h-4 w-4" />
-              <span className="sr-only">Next year</span>
-            </Button>
-          </div>
+        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-10 gap-12">
+            {/* Events List */}
+            <div className="lg:col-span-4">
+                <Card className="h-full">
+                    <CardHeader>
+                        <CardTitle>Upcoming Events</CardTitle>
+                        <CardDescription>A list of scheduled community activities.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ScrollArea className="h-[450px]">
+                            <div className="space-y-4 pr-4">
+                                {events.map((event) => (
+                                     <div key={event.id} className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
+                                        <p className="font-semibold">{event.title}</p>
+                                        <p className="text-sm text-muted-foreground">{format(event.date, "PPP")}</p>
+                                        <p className="text-sm mt-1">{event.description}</p>
+                                     </div>
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+            </div>
 
-          <Carousel className="w-full">
-            <CarouselContent>
-              <CarouselItem className="flex justify-center">
-                <Calendar
-                  numberOfMonths={6}
-                  month={new Date(year, 0, 1)}
-                  modifiers={{ highlighted: yearEvents }}
-                  modifiersClassNames={{
-                    highlighted: 'bg-primary text-primary-foreground rounded-full',
-                  }}
-                  onMonthChange={() => {}}
-                  className="p-0"
-                  classNames={calendarClassNames}
-                />
-              </CarouselItem>
-              <CarouselItem className="flex justify-center">
-                <Calendar
-                  numberOfMonths={6}
-                  month={new Date(year, 6, 1)}
-                  modifiers={{ highlighted: yearEvents }}
-                  modifiersClassNames={{
-                    highlighted: 'bg-primary text-primary-foreground rounded-full',
-                  }}
-                  onMonthChange={() => {}}
-                  className="p-0"
-                  classNames={calendarClassNames}
-                />
-              </CarouselItem>
-            </CarouselContent>
-            <CarouselPrevious className="absolute left-0 md:-left-12" />
-            <CarouselNext className="absolute right-0 md:-right-12" />
-          </Carousel>
+            {/* Calendar */}
+            <div className="lg:col-span-6 flex items-center justify-center">
+                 <Card className="p-4">
+                    <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        modifiers={{ highlighted: highlightedDays }}
+                        modifiersClassNames={{
+                            highlighted: calendarClassNames.day_highlighted,
+                        }}
+                        className="rounded-md"
+                        classNames={calendarClassNames}
+                    />
+                 </Card>
+            </div>
         </div>
       </div>
     </section>
