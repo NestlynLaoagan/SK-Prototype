@@ -27,10 +27,15 @@ export default function LoginPage() {
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
-      <div className="hidden bg-secondary lg:flex flex-col items-center justify-center p-8 text-center">
-        <Logo />
-        <h1 className="font-headline text-5xl font-bold mt-4">Barangay Bakakeng Central</h1>
-        <p className="text-muted-foreground mt-2">Your one-stop portal for community engagement.</p>
+      <div
+        className="hidden bg-cover bg-center lg:flex"
+        style={{ backgroundImage: "url('/loginBg.jpg')" }}
+      >
+        <div className="flex w-full flex-col items-center justify-center bg-black/50 p-8 text-center">
+            <Logo />
+            <h1 className="mt-4 font-headline text-5xl font-bold text-white">Barangay Bakakeng Central</h1>
+            <p className="mt-2 text-neutral-200">Your one-stop portal for community engagement.</p>
+        </div>
       </div>
       <div className="flex items-center justify-center min-h-screen py-12 px-4">
         <div className="mx-auto grid w-[400px] gap-6">
@@ -46,5 +51,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    
