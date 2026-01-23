@@ -29,9 +29,10 @@ export default function LoginPage() {
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
       <div
         className="hidden bg-cover bg-center lg:flex"
-        style={{ backgroundImage: "url('https://picsum.photos/seed/loginpage/1200/900')" }}
+         style={{ backgroundImage: `url(https://picsum.photos/seed/login/1200/800)` }}
       >
-        <div className="flex w-full flex-col items-center justify-center bg-black/50 p-8 text-center">
+
+        <div className="flex w-full flex-col items-center justify-center bg-black/60 p-8 text-center">
             <Logo />
             <h1 className="mt-4 font-headline text-5xl font-bold text-white">Barangay Bakakeng Central</h1>
             <p className="mt-2 text-neutral-200">Your one-stop portal for community engagement.</p>
