@@ -62,7 +62,7 @@ export function Events() {
       day_outside: "text-muted-foreground opacity-50",
       day_disabled: "text-muted-foreground opacity-50",
       day_selected: "bg-primary text-primary-foreground hover:bg-primary/90 focus:bg-primary/90",
-      day_highlighted: "bg-primary/20 text-primary-foreground rounded-full",
+      day_highlighted: "bg-primary/20 rounded-full",
   }
 
   return (
@@ -75,16 +75,16 @@ export function Events() {
           </p>
         </div>
 
-        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-10 gap-12">
+        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Events List */}
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-1">
                 <Card className="h-full">
                     <CardHeader>
                         <CardTitle>Upcoming Events</CardTitle>
                         <CardDescription>A list of scheduled community activities.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <ScrollArea className="h-[450px]">
+                        <ScrollArea className="h-[500px]">
                             <div className="space-y-4 pr-4">
                                 {events.map((event) => (
                                      <div key={event.id} className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
@@ -100,7 +100,7 @@ export function Events() {
             </div>
 
             {/* Calendar */}
-            <div className="lg:col-span-6 flex items-center justify-center">
+            <div className="lg:col-span-2 flex items-center justify-center">
                  <Card className="p-4">
                     <Calendar
                         mode="single"
