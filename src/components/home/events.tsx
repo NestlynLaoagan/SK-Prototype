@@ -75,16 +75,34 @@ export function Events() {
           </p>
         </div>
 
-        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-10 gap-12">
+            {/* Calendar */}
+            <div className="lg:col-span-7 flex items-start justify-center">
+                 <Card className="p-4">
+                    <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        modifiers={{ highlighted: highlightedDays }}
+                        modifiersClassNames={{
+                            highlighted: calendarClassNames.day_highlighted,
+                        }}
+                        numberOfMonths={3}
+                        className="rounded-md"
+                        classNames={calendarClassNames}
+                    />
+                 </Card>
+            </div>
+            
             {/* Events List */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-3">
                 <Card className="h-full">
                     <CardHeader>
                         <CardTitle>Upcoming Events</CardTitle>
                         <CardDescription>A list of scheduled community activities.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <ScrollArea className="h-[500px]">
+                        <ScrollArea className="h-[700px]">
                             <div className="space-y-4 pr-4">
                                 {events.map((event) => (
                                      <div key={event.id} className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
@@ -97,23 +115,6 @@ export function Events() {
                         </ScrollArea>
                     </CardContent>
                 </Card>
-            </div>
-
-            {/* Calendar */}
-            <div className="lg:col-span-2 flex items-center justify-center">
-                 <Card className="p-4">
-                    <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        modifiers={{ highlighted: highlightedDays }}
-                        modifiersClassNames={{
-                            highlighted: calendarClassNames.day_highlighted,
-                        }}
-                        className="rounded-md"
-                        classNames={calendarClassNames}
-                    />
-                 </Card>
             </div>
         </div>
       </div>
