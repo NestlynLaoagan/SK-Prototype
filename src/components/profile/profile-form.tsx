@@ -67,6 +67,7 @@ export function ProfileForm() {
   const { user, isUserLoading } = useUser();
   const [showSpecialNeeds, setShowSpecialNeeds] = useState(false);
   const [age, setAge] = useState<number | null>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -153,7 +154,7 @@ export function ProfileForm() {
                     render={({ field }) => (
                         <FormItem className="flex flex-col pt-2">
                         <FormLabel>Date of birth</FormLabel>
-                        <Popover>
+                        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                             <PopoverTrigger asChild>
                             <FormControl>
                                 <Button
@@ -179,7 +180,10 @@ export function ProfileForm() {
                                 fromYear={1930}
                                 toYear={new Date().getFullYear()}
                                 selected={field.value}
-                                onSelect={field.onChange}
+                                onSelect={(date) => {
+                                    field.onChange(date);
+                                    setIsCalendarOpen(false);
+                                }}
                                 disabled={(date) =>
                                 date > new Date() || date < new Date("1900-01-01")
                                 }
@@ -472,5 +476,3 @@ export function ProfileForm() {
     </Card>
   );
 }
-
-    
