@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useRouter } from "next/navigation";
 import { useFirebase } from "@/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { Loader } from "lucide-react";
@@ -29,7 +28,6 @@ const formSchema = z.object({
 });
 
 export function LoginForm() {
-  const router = useRouter();
   const { auth } = useFirebase();
   const { toast } = useToast();
   
@@ -50,7 +48,7 @@ export function LoginForm() {
         title: "Login Successful",
         description: "Welcome back!",
       });
-      router.push("/home");
+      // The redirect is now handled by the parent /login page component
     } catch (error: any) {
       console.error("Login failed:", error);
       let errorMessage = "An unknown error occurred during login.";

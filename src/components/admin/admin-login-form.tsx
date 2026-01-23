@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { useRouter } from "next/navigation"
 import { useFirebase } from "@/firebase"
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { doc, getDoc, setDoc } from "firebase/firestore"
@@ -31,7 +30,6 @@ const ADMIN_EMAIL = "barangay.admin.connect@system.local";
 const ADMIN_PASSWORD = "HPGMHVXBCCX23";
 
 export function AdminLoginForm() {
-  const router = useRouter()
   const { auth, firestore } = useFirebase()
   const { toast } = useToast()
 
@@ -49,8 +47,8 @@ export function AdminLoginForm() {
       title: "Login Successful",
       description: "Welcome, Admin!",
     })
-    // Use replace to prevent going back to the login page
-    router.replace("/admin")
+    // The redirect is now handled by the parent /login page component
+    // which listens for auth state changes and user roles.
   }
 
   const handleAccessDenied = async () => {
