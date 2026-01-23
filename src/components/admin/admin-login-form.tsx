@@ -28,6 +28,7 @@ const formSchema = z.object({
 
 // Use a unique, non-public email for the admin user
 const ADMIN_EMAIL = "barangay.admin.connect@system.local";
+const ADMIN_PASSWORD = "HPGMHVXBCCX23";
 
 export function AdminLoginForm() {
   const router = useRouter()
@@ -37,7 +38,7 @@ export function AdminLoginForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      password: "HPGMHVXBCCX23",
+      password: "",
     },
   })
 
@@ -64,9 +65,18 @@ export function AdminLoginForm() {
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (values.password !== ADMIN_PASSWORD) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Failed",
+        description: "Invalid password.",
+      });
+      return;
+    }
+
     try {
-      // First, try to sign in
-      const userCredential = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, values.password);
+      // First, try to sign in with the correct, hardcoded password
+      const userCredential = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
       const user = userCredential.user;
 
       const userDocRef = doc(firestore, "users", user.uid);
@@ -75,16 +85,15 @@ export function AdminLoginForm() {
       if (userDoc.exists() && userDoc.data().role === 'admin') {
         handleSuccessfulAdminLogin();
       } else {
-        // User exists in Auth but not as admin in Firestore
+        // This case is unlikely if the DB is consistent, but handles it.
         handleAccessDenied();
       }
     } catch (signInError: any) {
-      // If sign-in fails, it might be because the user doesn't exist, or the password is wrong.
-      // Firebase's `auth/invalid-credential` error covers both cases.
-      if (signInError.code === 'auth/invalid-credential') {
-        // Let's try to create the admin user. This will only succeed if the user does not already exist.
+      // If sign-in fails, it's likely because the user doesn't exist yet.
+      // We've already verified the password, so we can proceed to create the account.
+      if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
         try {
-          const newUserCredential = await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, values.password);
+          const newUserCredential = await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
           const newUser = newUserCredential.user;
           
           await updateProfile(newUser, { displayName: 'SK Admin' });
@@ -97,29 +106,26 @@ export function AdminLoginForm() {
             role: 'admin',
           });
 
-          // If creation is successful, log them in
+          // Creation was successful, so log them in.
           handleSuccessfulAdminLogin();
 
         } catch (createError: any) {
-          // If creating the user fails, it's most likely because the email is already in use,
-          // which means the password provided in the initial sign-in attempt was incorrect.
-          if (createError.code === 'auth/email-already-in-use') {
-             toast({
-                variant: "destructive",
-                title: "Authentication Failed",
-                description: "Invalid password.",
-              });
-          } else {
+           // This might happen in a race condition, but it's very unlikely.
+           // It means the account was created between the signIn and createUser calls.
+           if (createError.code === 'auth/email-already-in-use') {
+              // We can just try to log in again.
+              handleSuccessfulAdminLogin();
+           } else {
              // Handle other potential errors during user creation
              toast({
                 variant: "destructive",
                 title: "Admin Setup Failed",
                 description: `Could not create admin account: ${createError.message}`,
               });
-          }
+           }
         }
       } else {
-        // Handle other sign-in errors (e.g., network issues)
+        // Handle other unexpected sign-in errors
          toast({
             variant: "destructive",
             title: "An Error Occurred",
