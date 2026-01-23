@@ -61,11 +61,11 @@ export function Events() {
         nav: "hidden",
         table: "w-full border-collapse p-2",
         head_row: "flex justify-around mb-1",
-        head_cell: "text-muted-foreground w-8 font-semibold text-sm uppercase text-center",
+        head_cell: "text-muted-foreground w-9 font-semibold text-[0.8rem] uppercase text-center",
         row: "flex w-full mt-2 justify-around",
-        cell: "h-8 w-8 text-center text-sm p-0 relative flex items-center justify-center",
-        day: "h-8 w-8 p-0 font-normal aria-selected:opacity-100",
-        day_selected: "bg-primary/20 text-primary font-bold",
+        cell: "h-9 w-9 text-center text-sm p-0 relative flex items-center justify-center",
+        day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
+        day_selected: "bg-primary/20 text-primary font-bold rounded-full",
         day_today: "bg-accent text-accent-foreground rounded-full",
         day_outside: "text-muted-foreground opacity-30",
         day_disabled: "text-muted-foreground opacity-50",
@@ -76,16 +76,16 @@ export function Events() {
     };
     
     const modifiersClassNames = {
-        event: 'ring-2 ring-primary rounded-full',
+        event: 'bg-primary text-primary-foreground rounded-full',
     };
 
     return (
         <section id="events" className="w-full py-16 md:py-24 lg:py-32">
             <div className="container mx-auto px-4 md:px-6">
                 <div className="flex flex-col items-center text-center space-y-3 mb-12">
-                    <h2 className="text-3xl font-headline font-bold tracking-tighter sm:text-4xl md:text-5xl">Events</h2>
+                    <h2 className="text-3xl font-headline font-bold tracking-tighter sm:text-4xl md:text-5xl">Community Events Calendar</h2>
                     <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                        This calendar outlines the scheduled events at the Bakakeng Central Basketball Court
+                        Stay up-to-date with all the happenings in Barangay Bakakeng Central for 2026.
                     </p>
                 </div>
                 
