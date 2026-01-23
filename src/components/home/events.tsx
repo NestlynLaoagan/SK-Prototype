@@ -3,6 +3,7 @@ import * as React from "react"
 import { Calendar } from "@/components/ui/calendar"
 import { Card } from "@/components/ui/card"
 import { format } from "date-fns"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 const year = 2026;
 const months = Array.from({ length: 12 }, (_, i) => new Date(year, i, 1));
@@ -64,7 +65,7 @@ export function Events() {
         head_cell: "text-muted-foreground w-9 font-semibold text-[0.8rem] uppercase text-center",
         row: "flex w-full mt-2 justify-around",
         cell: "h-9 w-9 text-center text-sm p-0 relative flex items-center justify-center",
-        day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
+        day: "h-8 w-8 p-0 font-normal aria-selected:opacity-100 flex items-center justify-center",
         day_selected: "bg-primary/20 text-primary font-bold rounded-full",
         day_today: "bg-accent text-accent-foreground rounded-full",
         day_outside: "text-muted-foreground opacity-30",
@@ -110,26 +111,30 @@ export function Events() {
 
                     {/* Events List */}
                     <div className="lg:col-span-3">
-                        <div className="space-y-8 sticky top-24">
-                           <h3 className="text-3xl font-bold text-primary font-headline text-center">Upcoming Events</h3>
-                            {Object.keys(eventsByMonth).length > 0 ? (
-                                Object.entries(eventsByMonth).map(([monthName, events]) => (
-                                    <div key={monthName}>
-                                        <h4 className="text-2xl font-bold text-primary/90 font-headline">{`${monthName} ${year}`}</h4>
-                                        <ul className="mt-4 space-y-3 list-none">
-                                            {events.map((event, index) => (
-                                                <li key={index} className="text-sm border-l-4 border-primary/50 pl-4 py-1.5 bg-secondary/50 rounded-r-lg">
-                                                    <span className="font-bold text-foreground">{event.name}</span>
-                                                    <br/>
-                                                    <span className="text-xs text-muted-foreground">{format(event.date, "MMMM d, yyyy")}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-muted-foreground text-center">No upcoming events scheduled.</p>
-                            )}
+                        <div className="sticky top-24">
+                            <h3 className="text-3xl font-bold text-primary font-headline text-center mb-6">Upcoming Events</h3>
+                            <ScrollArea className="h-[calc(100vh-12rem)] pr-4">
+                                <div className="space-y-8">
+                                    {Object.keys(eventsByMonth).length > 0 ? (
+                                        Object.entries(eventsByMonth).map(([monthName, events]) => (
+                                            <div key={monthName}>
+                                                <h4 className="text-2xl font-bold text-primary/90 font-headline">{`${monthName} ${year}`}</h4>
+                                                <ul className="mt-4 space-y-3 list-none">
+                                                    {events.map((event, index) => (
+                                                        <li key={index} className="text-sm border-l-4 border-primary/50 pl-4 py-1.5 bg-secondary/50 rounded-r-lg">
+                                                            <span className="font-bold text-foreground">{event.name}</span>
+                                                            <br/>
+                                                            <span className="text-xs text-muted-foreground">{format(event.date, "MMMM d, yyyy")}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-muted-foreground text-center">No upcoming events scheduled.</p>
+                                    )}
+                                </div>
+                            </ScrollArea>
                         </div>
                     </div>
                 </div>
