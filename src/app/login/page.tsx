@@ -1,3 +1,4 @@
+
 "use client";
 
 import { AuthTabs } from '@/components/auth-tabs';
@@ -14,16 +15,22 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Determine the combined loading state
     const isLoading = isUserLoading || (user && isProfileLoading);
+    
+    // Only perform actions once all loading is complete
     if (!isLoading && user && userProfile) {
       if (userProfile.role === 'admin') {
+        // If user is an admin, redirect to the admin dashboard
         router.replace('/admin');
       } else {
+        // If user is a member, redirect to the home page
         router.replace('/home');
       }
     }
   }, [user, userProfile, isUserLoading, isProfileLoading, router]);
 
+  // Show a loader while checking authentication or fetching the user profile
   const isCheckingAuth = isUserLoading || (user && isProfileLoading);
   if (isCheckingAuth) {
     return (
@@ -33,13 +40,13 @@ export default function LoginPage() {
     );
   }
 
-  // If there's no user, show the login form.
+  // If loading is complete and there is no user, show the login UI
   if (!user) {
     return (
       <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
         <div
           className="hidden bg-cover bg-center lg:flex"
-          style={{ backgroundImage: `url('/loginBg.jpg')` }}
+          style={{ backgroundImage: `url('https://picsum.photos/seed/loginbg/1200/800')` }}
         >
 
           <div className="flex w-full flex-col items-center justify-center bg-black/60 p-8 text-center">
@@ -63,7 +70,7 @@ export default function LoginPage() {
     );
   }
 
-  // Fallback loader if the redirect hasn't happened yet for some reason
+  // Fallback loader while the redirect completes
   return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader className="h-8 w-8 animate-spin" />

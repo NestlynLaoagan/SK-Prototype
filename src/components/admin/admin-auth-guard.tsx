@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser } from "@/firebase";
@@ -12,23 +13,28 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     const router = useRouter();
 
     useEffect(() => {
+        // Wait until both user and profile loading are complete
         const stillLoading = isUserLoading || (user && isProfileLoading);
         if (stillLoading) {
-            return; // Wait until all auth/profile data is loaded
+            return; 
         }
 
-        // Once loading is complete...
+        // Once loading is fully complete, make routing decisions
         if (!user) {
-            // No user, not authenticated, go to admin login.
+            // No user is authenticated, redirect to the admin login page
             router.replace('/admin/login');
         } else if (userProfile?.role !== 'admin') {
-            // User exists but is not an admin, send to public home page.
+            // User is authenticated but is not an admin, redirect to public home
             router.replace('/home');
         }
+        // If user is an admin, do nothing and allow children to render
     }, [user, userProfile, isUserLoading, isProfileLoading, router]);
 
-    // While loading, or if a redirect is imminent, show a loader.
-    if (isUserLoading || (user && isProfileLoading)) {
+    // Determine the combined loading state
+    const isLoading = isUserLoading || (user && isProfileLoading);
+
+    // While loading, show a full-page loader to prevent content flicker
+    if (isLoading) {
         return (
             <div className="flex h-[80vh] w-full items-center justify-center">
                 <Loader className="h-8 w-8 animate-spin" />
@@ -36,12 +42,12 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
         );
     }
 
-    // If loading is complete and user is an admin, show the content.
+    // If loading is complete and user is a confirmed admin, render the protected content
     if (user && userProfile?.role === 'admin') {
         return <>{children}</>;
     }
 
-    // Fallback loader for any other case (e.g., during redirect).
+    // Fallback loader for edge cases, such as during the redirect triggered by the useEffect
     return (
         <div className="flex h-[80vh] w-full items-center justify-center">
             <Loader className="h-8 w-8 animate-spin" />
