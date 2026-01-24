@@ -1,3 +1,5 @@
+"use client";
+
 import { AppHeader } from "@/components/app-header";
 import { Events } from "@/components/home/events";
 import { Feedback } from "@/components/home/feedback";
@@ -7,6 +9,7 @@ import { IskaiChatbot } from "@/components/iskai-chatbot";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Megaphone, Users } from "lucide-react";
 import { CurrentYear } from "@/components/current-year";
+import { MemberAuthGuard } from "@/components/auth/member-auth-guard";
 
 const announcements = [
   {
@@ -34,49 +37,51 @@ const announcements = [
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <AppHeader />
-      <main className="flex-1">
-        <Hero />
-        <section id="announcements" className="w-full py-16 md:py-24 lg:py-32 bg-secondary/50">
-          <div className="container mx-auto flex flex-col items-center justify-center gap-8 px-4 md:px-6">
-            <div className="flex flex-col items-center text-center space-y-3">
-              <h2 className="text-3xl font-headline font-bold tracking-tighter sm:text-4xl md:text-5xl">Latest Announcements</h2>
-              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Stay informed about important news and updates in our community.
-              </p>
-            </div>
+    <MemberAuthGuard>
+        <div className="flex flex-col min-h-screen">
+        <AppHeader />
+        <main className="flex-1">
+            <Hero />
+            <section id="announcements" className="w-full py-16 md:py-24 lg:py-32 bg-secondary/50">
+            <div className="container mx-auto flex flex-col items-center justify-center gap-8 px-4 md:px-6">
+                <div className="flex flex-col items-center text-center space-y-3">
+                <h2 className="text-3xl font-headline font-bold tracking-tighter sm:text-4xl md:text-5xl">Latest Announcements</h2>
+                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                    Stay informed about important news and updates in our community.
+                </p>
+                </div>
 
-            <div className="w-full max-w-4xl grid gap-6">
-                {announcements.map((announcement) => (
-                    <Card key={announcement.id}>
-                        <CardHeader className="flex flex-row items-start gap-4 space-y-0">
-                            <div className="mt-1">
-                                <announcement.icon className="h-6 w-6 text-primary" />
-                            </div>
-                            <div className="flex-1">
-                                <CardTitle>{announcement.title}</CardTitle>
-                                <CardDescription>{announcement.date}</CardDescription>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-muted-foreground">{announcement.content}</p>
-                        </CardContent>
-                    </Card>
-                ))}
+                <div className="w-full max-w-4xl grid gap-6">
+                    {announcements.map((announcement) => (
+                        <Card key={announcement.id}>
+                            <CardHeader className="flex flex-row items-start gap-4 space-y-0">
+                                <div className="mt-1">
+                                    <announcement.icon className="h-6 w-6 text-primary" />
+                                </div>
+                                <div className="flex-1">
+                                    <CardTitle>{announcement.title}</CardTitle>
+                                    <CardDescription>{announcement.date}</CardDescription>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-muted-foreground">{announcement.content}</p>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
             </div>
-          </div>
-        </section>
-        <Projects />
-        <Events />
-        <Feedback />
-      </main>
-      <IskaiChatbot />
-       <footer className="bg-secondary/50">
-        <div className="container py-6 text-center text-muted-foreground text-sm">
-          © <CurrentYear /> Barangay Bakakeng Central. All Rights Reserved.
+            </section>
+            <Projects />
+            <Events />
+            <Feedback />
+        </main>
+        <IskaiChatbot />
+        <footer className="bg-secondary/50">
+            <div className="container py-6 text-center text-muted-foreground text-sm">
+            © <CurrentYear /> Barangay Bakakeng Central. All Rights Reserved.
+            </div>
+        </footer>
         </div>
-      </footer>
-    </div>
+    </MemberAuthGuard>
   );
 }
