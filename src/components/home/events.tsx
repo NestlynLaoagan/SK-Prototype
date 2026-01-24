@@ -1,7 +1,8 @@
 "use client"
-import * as React from "react"
+import React, { useState, useEffect } from "react"
 import { Calendar } from "@/components/ui/calendar"
 import { Card } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const year = 2026;
 const months = Array.from({ length: 12 }, (_, i) => new Date(year, i, 1));
@@ -52,6 +53,11 @@ const allEventDays = Object.values(eventsByMonth).flat().map(event => event.date
 
 
 export function Events() {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     const calendarClassNames = {
         month: 'space-y-4',
@@ -89,7 +95,7 @@ export function Events() {
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8">
-                    {months.map((month) => (
+                    {isClient ? months.map((month) => (
                         <Card key={month.toISOString()} className="shadow-md p-3">
                             <Calendar
                                 month={month}
@@ -100,7 +106,13 @@ export function Events() {
                                 modifiersClassNames={modifiersClassNames}
                             />
                         </Card>
-                    ))}
+                    )) : (
+                        Array.from({ length: 12 }).map((_, index) => (
+                            <Card key={index} className="shadow-md p-3 h-[290px]">
+                                <Skeleton className="w-full h-full" />
+                            </Card>
+                        ))
+                    )}
                 </div>
             </div>
         </section>
