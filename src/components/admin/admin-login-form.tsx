@@ -27,7 +27,7 @@ const formSchema = z.object({
 
 // Use a unique, non-public email for the admin user
 const ADMIN_EMAIL = "barangay.admin.connect@system.local";
-const ADMIN_PASSWORD = "HPGMHVXBCCX23";
+const ADMIN_PASSWORD = "SKBAKAKENG@CCX23";
 
 export function AdminLoginForm() {
   const { auth, firestore } = useFirebase()

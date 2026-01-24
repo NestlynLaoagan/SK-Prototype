@@ -23,7 +23,7 @@ import { collection, doc } from "firebase/firestore";
 import type { User as UserModel } from "@/lib/types";
 import { PasswordInput } from "@/components/ui/password-input";
 
-const ADMIN_PASSWORD = "HPGMHVXBCCX23";
+const ADMIN_PASSWORD = "SKBAKAKENG@CCX23";
 
 export default function RolesPage() {
   const { firestore } = useFirebase();
