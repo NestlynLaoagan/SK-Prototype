@@ -13,20 +13,20 @@ export default function AdminLoginPage() {
     const router = useRouter();
 
     useEffect(() => {
-        const isLoading = isUserLoading || isProfileLoading;
-        // If user is loaded and has a profile
+        const isLoading = isUserLoading || (user && isProfileLoading);
+        // When loading is finished and we have the user's data...
         if (!isLoading && user && userProfile) {
             if (userProfile.role === 'admin') {
-                router.replace('/admin'); // Redirect to admin dashboard
+                // Successful login or already logged in as admin, go to dashboard.
+                router.replace('/admin');
             } else {
-                // If a non-admin user somehow gets here and is logged in, send to home
+                // Logged in as non-admin, go to public home.
                 router.replace('/home');
             }
         }
     }, [user, userProfile, isUserLoading, isProfileLoading, router]);
 
-    // Show a loader while we are determining if a user is already logged in
-    // and has an admin role.
+    // While we check auth status, show a loader. Also if user is logged in but we are waiting for profile.
     const isCheckingAuth = isUserLoading || (user && isProfileLoading);
     if (isCheckingAuth) {
         return (
@@ -36,10 +36,19 @@ export default function AdminLoginPage() {
         );
     }
 
-    // If no user is logged in, show the admin login form.
+    // If we are done checking and there is no user, show the login form.
+    if (!user) {
+        return (
+            <div className="flex min-h-screen w-full items-center justify-center bg-muted">
+                <AdminLoginForm />
+            </div>
+        );
+    }
+
+    // Fallback loader while redirect happens
     return (
         <div className="flex min-h-screen w-full items-center justify-center bg-muted">
-            <AdminLoginForm />
+            <Loader className="h-8 w-8 animate-spin" />
         </div>
     );
 }

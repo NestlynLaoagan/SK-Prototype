@@ -14,8 +14,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Wait until we have all the user and profile info
-    const isLoading = isUserLoading || isProfileLoading;
+    const isLoading = isUserLoading || (user && isProfileLoading);
     if (!isLoading && user && userProfile) {
       if (userProfile.role === 'admin') {
         router.replace('/admin');
@@ -25,8 +24,6 @@ export default function LoginPage() {
     }
   }, [user, userProfile, isUserLoading, isProfileLoading, router]);
 
-  // Show a loader while we are determining where to redirect the user.
-  // This covers the case where a user is already logged in and visits the login page.
   const isCheckingAuth = isUserLoading || (user && isProfileLoading);
   if (isCheckingAuth) {
     return (
