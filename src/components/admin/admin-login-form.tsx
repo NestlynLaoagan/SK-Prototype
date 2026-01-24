@@ -64,9 +64,9 @@ export function AdminLoginForm() {
       });
       router.push('/admin');
     } catch (signInError: any) {
-      // If sign-in fails because the user doesn't exist, create the admin account.
-      // This is a one-time setup for the first admin login.
-      if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
+      if (signInError.code === 'auth/user-not-found') {
+        // If the user doesn't exist, create the admin account.
+        // This is a one-time setup for the first admin login.
         try {
           const newUserCredential = await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
           const newUser = newUserCredential.user;
@@ -89,31 +89,25 @@ export function AdminLoginForm() {
           router.push('/admin');
 
         } catch (createError: any) {
-           // This might happen in a race condition if the account was created elsewhere
-           // between the signIn and createUser calls.
-           if (createError.code === 'auth/email-already-in-use') {
-             try {
-                // If it already exists, the original signIn should have worked, but as a fallback,
-                // we attempt to sign in again.
-                await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
-                router.push('/admin');
-             } catch (e) {
-                toast({
-                    variant: "destructive",
-                    title: "Login Failed",
-                    description: "An unexpected error occurred. Please try again.",
-                });
-             }
-           } else {
-             // Handle other potential errors during user creation
-             toast({
-                variant: "destructive",
-                title: "Admin Setup Failed",
-                description: `Could not create admin account: ${createError.message}`,
-              });
-           }
+           // This might happen in a race condition. If it already exists now,
+           // something is weird, but we can just tell the user to try again.
+           toast({
+              variant: "destructive",
+              title: "Admin Setup Failed",
+              description: `Could not create admin account: ${createError.message}. Please try logging in again.`,
+            });
         }
-      } else {
+      } else if (signInError.code === 'auth/invalid-credential') {
+          // This case means the user exists in Firebase Auth, but the password is wrong.
+          // This happens if the hardcoded ADMIN_PASSWORD was changed in the code, but
+          // the user in Firebase Auth still has the old password.
+          toast({
+              variant: "destructive",
+              title: "Password Mismatch",
+              description: "The admin account exists, but the password you entered is incorrect. The admin password in the system may have changed.",
+          });
+      }
+      else {
         // Handle other unexpected sign-in errors
          toast({
             variant: "destructive",
