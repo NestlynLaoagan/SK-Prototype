@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search } from "lucide-react";
+import { Search, Loader } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -18,37 +18,41 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useCollection, useFirebase, updateDocumentNonBlocking, useMemoFirebase } from "@/firebase";
+import { collection, doc } from "firebase/firestore";
+import type { User as UserModel } from "@/lib/types";
 import { PasswordInput } from "@/components/ui/password-input";
-
-type User = {
-    id: number;
-    name: string;
-    username: string;
-    role: "Member" | "Admin";
-};
-
-const initialUsers: User[] = [
-    { id: 1, name: "Juan Dela Cruz", username: "juandelacruz", role: "Member" },
-    { id: 2, name: "Maria Clara", username: "mariaclara", role: "Member" },
-    { id: 3, name: "Crisostomo Ibarra", username: "crisostomo", role: "Member" },
-];
 
 const ADMIN_PASSWORD = "HPGMHVXBCCX23";
 
 export default function RolesPage() {
-  const [users, setUsers] = useState<User[]>(initialUsers);
-  const [userToUpdate, setUserToUpdate] = useState<number | null>(null);
+  const { firestore } = useFirebase();
+  const usersCollectionRef = useMemoFirebase(() => firestore ? collection(firestore, 'users') : null, [firestore]);
+  const { data: users, isLoading } = useCollection<UserModel>(usersCollectionRef);
+
+  const [localUsers, setLocalUsers] = useState<UserModel[]>([]);
+  const [userToUpdate, setUserToUpdate] = useState<UserModel | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
+  
+  useEffect(() => {
+    if (users) {
+      setLocalUsers(users);
+    }
+  }, [users]);
 
-  const handleRoleChange = (userId: number, role: "Member" | "Admin") => {
-    setUsers(users.map(user => user.id === userId ? { ...user, role } : user));
+  const handleRoleChange = (userId: string, role: "member" | "admin") => {
+    setLocalUsers(prev => prev.map(user => user.id === userId ? { ...user, role } : user));
   };
 
-  const handleSaveClick = (userId: number) => {
-    setUserToUpdate(userId);
-    setIsAlertOpen(true);
+  const handleSaveClick = (userId: string) => {
+    const user = localUsers.find(u => u.id === userId);
+    if (user) {
+      setUserToUpdate(user);
+      setIsAlertOpen(true);
+    }
   };
 
   const handleConfirmRoleChange = () => {
@@ -58,38 +62,36 @@ export default function RolesPage() {
             description: "Incorrect admin password. Role change was not saved.",
             variant: "destructive",
         });
-    } else {
-        if (userToUpdate !== null) {
-            const user = users.find(u => u.id === userToUpdate);
-            toast({
-                title: "Role Saved",
-                description: `Role for ${user?.name} has been updated to ${user?.role}.`,
-            });
-            // In a real app, you would make an API call here.
-        }
+        // Don't close the dialog on failure
+        return; 
     }
-    // Reset state and close dialog
-    setAdminPassword("");
-    setUserToUpdate(null);
-    setIsAlertOpen(false);
+    
+    if (userToUpdate) {
+        const userDocRef = doc(firestore, 'users', userToUpdate.id);
+        // Use non-blocking update
+        updateDocumentNonBlocking(userDocRef, { role: userToUpdate.role }, { merge: true });
+        toast({
+            title: "Role Saved",
+            description: `Role for ${userToUpdate.fullName} has been updated to ${userToUpdate.role}.`,
+        });
+    }
+    
+    handleCancelRoleChange();
   };
 
   const handleCancelRoleChange = () => {
-    // Reset state and close dialog
     setAdminPassword("");
     setUserToUpdate(null);
     setIsAlertOpen(false);
   }
 
-  const handleOpenChange = (open: boolean) => {
-      setIsAlertOpen(open);
-      if (!open) {
-        // Reset state if dialog is closed without action
-        setAdminPassword("");
-        setUserToUpdate(null);
-      }
-  }
-
+  const filteredUsers = useMemo(() => {
+    if (!localUsers) return [];
+    return localUsers.filter(user => 
+        user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [localUsers, searchTerm]);
 
   return (
     <div className="space-y-8">
@@ -106,35 +108,58 @@ export default function RolesPage() {
         <CardContent className="space-y-4">
             <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search users..." className="pl-8" />
+                <Input 
+                    placeholder="Search users by name or email..." 
+                    className="pl-8" 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
             </div>
             <Table>
                 <TableHeader>
                     <TableRow>
                         <TableHead>Full Name</TableHead>
-                        <TableHead>Username</TableHead>
+                        <TableHead>Email</TableHead>
                         <TableHead>Role</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {users.map(user => (
+                    {isLoading && (
+                        <TableRow>
+                            <TableCell colSpan={4} className="text-center">
+                                <div className="flex justify-center items-center p-4">
+                                  <Loader className="h-6 w-6 animate-spin" />
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    )}
+                    {!isLoading && filteredUsers.map(user => (
                         <TableRow key={user.id}>
-                            <TableCell className="font-medium">{user.name}</TableCell>
-                            <TableCell>{user.username}</TableCell>
+                            <TableCell className="font-medium">{user.fullName}</TableCell>
+                            <TableCell>{user.email}</TableCell>
                             <TableCell>
-                                <Select value={user.role} onValueChange={(value: "Member" | "Admin") => handleRoleChange(user.id, value)}>
+                                <Select 
+                                  value={user.role} 
+                                  onValueChange={(value: "member" | "admin") => handleRoleChange(user.id, value)}
+                                  disabled={user.email === 'barangay.admin.connect@system.local'}
+                                >
                                     <SelectTrigger className="w-[120px]">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Member">Member</SelectItem>
-                                        <SelectItem value="Admin">Admin</SelectItem>
+                                        <SelectItem value="member">Member</SelectItem>
+                                        <SelectItem value="admin">Admin</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </TableCell>
                             <TableCell className="text-right">
-                                <Button onClick={() => handleSaveClick(user.id)}>Save</Button>
+                                <Button 
+                                  onClick={() => handleSaveClick(user.id)}
+                                  disabled={user.email === 'barangay.admin.connect@system.local' || users?.find(u => u.id === user.id)?.role === user.role}
+                                >
+                                  Save
+                                </Button>
                             </TableCell>
                         </TableRow>
                     ))}
@@ -142,7 +167,7 @@ export default function RolesPage() {
             </Table>
         </CardContent>
       </Card>
-      <AlertDialog open={isAlertOpen} onOpenChange={handleOpenChange}>
+      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>
             <AlertDialogHeader>
                 <AlertDialogTitle>Admin Verification Required</AlertDialogTitle>
