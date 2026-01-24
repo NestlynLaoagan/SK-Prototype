@@ -13,25 +13,24 @@ export default function AdminLoginPage() {
     const { userProfile, isProfileLoading } = useUserProfile(user);
     const router = useRouter();
 
+    const isLoading = isUserLoading || (user && isProfileLoading);
+
     useEffect(() => {
-        // Determine the combined loading state
-        const isLoading = isUserLoading || (user && isProfileLoading);
-        
-        // Only perform actions once all loading is complete
-        if (!isLoading && user && userProfile) {
+        if (isLoading) {
+            return; // Wait until loading is complete
+        }
+
+        if (user && userProfile) {
             if (userProfile.role === 'admin') {
-                // If user is already an admin, ensure they are on the dashboard
-                router.replace('/admin');
+                router.replace('/admin'); // Already an admin, go to dashboard
             } else {
-                // If user is not an admin, they should not be on this page
-                router.replace('/home');
+                router.replace('/home'); // Logged in as non-admin, go to home
             }
         }
-    }, [user, userProfile, isUserLoading, isProfileLoading, router]);
+    }, [user, userProfile, isLoading, router]);
 
-    // Show a loader while checking authentication or fetching the user profile
-    const isCheckingAuth = isUserLoading || (user && isProfileLoading);
-    if (isCheckingAuth) {
+    // Show loader while loading or during redirect
+    if (isLoading || user) {
         return (
             <div className="flex min-h-screen w-full items-center justify-center bg-muted">
                 <Loader className="h-8 w-8 animate-spin" />
@@ -39,19 +38,10 @@ export default function AdminLoginPage() {
         );
     }
 
-    // If loading is complete and there is no user, show the login form
-    if (!user) {
-        return (
-            <div className="flex min-h-screen w-full items-center justify-center bg-muted">
-                <AdminLoginForm />
-            </div>
-        );
-    }
-
-    // Fallback loader while the redirect completes
+    // Only show the login form if not loading and not logged in
     return (
         <div className="flex min-h-screen w-full items-center justify-center bg-muted">
-            <Loader className="h-8 w-8 animate-spin" />
+            <AdminLoginForm />
         </div>
     );
 }
