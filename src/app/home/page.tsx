@@ -6,6 +6,7 @@ import { Projects } from "@/components/home/projects";
 import { IskaiChatbot } from "@/components/iskai-chatbot";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Megaphone, Users } from "lucide-react";
+import { CurrentYear } from "@/components/current-year";
 
 const announcements = [
   {
@@ -73,7 +74,7 @@ export default function HomePage() {
       <IskaiChatbot />
        <footer className="bg-secondary/50">
         <div className="container py-6 text-center text-muted-foreground text-sm">
-          © {new Date().getFullYear()} Barangay Bakakeng Central. All Rights Reserved.
+          © <CurrentYear /> Barangay Bakakeng Central. All Rights Reserved.
         </div>
       </footer>
     </div>
