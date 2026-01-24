@@ -8,6 +8,7 @@ import { useFirebase } from "@/firebase"
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 import { Loader } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -33,6 +34,7 @@ const ADMIN_PASSWORD = "SKBAKAKENG@CCX23";
 export function AdminLoginForm() {
   const { auth, firestore } = useFirebase()
   const { toast } = useToast()
+  const router = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -54,12 +56,13 @@ export function AdminLoginForm() {
     }
 
     try {
-      // Attempt to sign in. The guards will handle redirection and access control based on role.
+      // Attempt to sign in.
       await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
       toast({
         title: "Login Successful",
         description: "Welcome, Admin! Redirecting...",
       });
+      router.push('/admin');
     } catch (signInError: any) {
       // If sign-in fails because the user doesn't exist, create the admin account.
       // This is a one-time setup for the first admin login.
@@ -83,15 +86,24 @@ export function AdminLoginForm() {
             title: "Admin Account Created",
             description: "Welcome, Admin! Redirecting...",
           });
+          router.push('/admin');
 
         } catch (createError: any) {
            // This might happen in a race condition if the account was created elsewhere
            // between the signIn and createUser calls.
            if (createError.code === 'auth/email-already-in-use') {
-              toast({
-                title: "Login Successful",
-                description: "Welcome, Admin! Redirecting...",
-              });
+             try {
+                // If it already exists, the original signIn should have worked, but as a fallback,
+                // we attempt to sign in again.
+                await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
+                router.push('/admin');
+             } catch (e) {
+                toast({
+                    variant: "destructive",
+                    title: "Login Failed",
+                    description: "An unexpected error occurred. Please try again.",
+                });
+             }
            } else {
              // Handle other potential errors during user creation
              toast({
