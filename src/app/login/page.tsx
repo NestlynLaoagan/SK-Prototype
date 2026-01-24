@@ -3,45 +3,11 @@
 
 import { AuthTabs } from '@/components/auth-tabs';
 import { Logo } from '@/components/logo';
-import { useUser } from '@/firebase';
-import { useUserProfile } from '@/hooks/use-user-profile';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { Loader } from 'lucide-react';
+import { RedirectIfAuthenticatedGuard } from '@/components/auth/redirect-if-authenticated-guard';
 
 export default function LoginPage() {
-  const { user, isUserLoading } = useUser();
-  const { userProfile, isProfileLoading } = useUserProfile(user);
-  const router = useRouter();
-
-  const isLoading = isUserLoading || (user && isProfileLoading);
-
-  useEffect(() => {
-    if (isLoading) {
-      return; // Wait
-    }
-
-    if (user && userProfile) {
-      if (userProfile.role === 'admin') {
-        router.replace('/admin');
-      } else {
-        router.replace('/home');
-      }
-    }
-  }, [user, userProfile, isLoading, router]);
-
-
-  // Show loader while loading or if a user exists (which means a redirect will happen)
-  if (isLoading || user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-  
-  // Only show the full login UI if loading is complete and there is no user
   return (
+    <RedirectIfAuthenticatedGuard>
       <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
         <div
           className="hidden bg-cover bg-center lg:flex"
@@ -65,5 +31,6 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+    </RedirectIfAuthenticatedGuard>
   );
 }
