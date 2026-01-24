@@ -23,11 +23,11 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
         if (!user) {
             // Not authenticated, send to the admin login page
             router.replace('/admin/login');
-        } else if (!userProfile || userProfile.role !== 'admin') {
-            // Authenticated but not an admin, send to the public homepage
+        } else if (userProfile && userProfile.role !== 'admin') {
+            // Authenticated, profile is loaded, but NOT an admin. Send to public home.
             router.replace('/home');
         }
-        // If all checks pass, the user is an authenticated admin. The component will render its children.
+        // If user is an admin, this effect does nothing, and the component will render its children below.
     }, [isLoading, user, userProfile, router]);
 
 
