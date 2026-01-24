@@ -28,7 +28,7 @@ const formSchema = z.object({
 
 // This email is used to uniquely identify the single admin account.
 // Changing it forces the system to create a new admin user if the old one has a password sync issue.
-const ADMIN_EMAIL = "barangay.admin.connect@system.local";
+const ADMIN_EMAIL = "barangay.admin.connect.v3@system.local";
 const ADMIN_PASSWORD = "SKBAKAKENG@CCX23";
 
 export function AdminLoginForm() {
@@ -66,7 +66,7 @@ export function AdminLoginForm() {
       router.push('/admin');
     } catch (signInError: any) {
       // If sign-in fails because the user doesn't exist, we create it.
-      if (signInError.code === 'auth/user-not-found') {
+      if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
         try {
           const newUserCredential = await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
           const newUser = newUserCredential.user;
@@ -95,14 +95,6 @@ export function AdminLoginForm() {
               description: `Could not create admin account: ${createError.message}.`,
             });
         }
-      } else if (signInError.code === 'auth/invalid-credential' || signInError.code === 'auth/wrong-password') {
-          // This case handles when the account exists but the password in Firebase is wrong.
-          // The fix (changing ADMIN_EMAIL) is designed to prevent this block from ever being hit again.
-          toast({
-              variant: "destructive",
-              title: "Password Mismatch",
-              description: "The admin account password in the database is out of sync. Please contact support.",
-          });
       }
       else {
         // Handle other unexpected sign-in errors

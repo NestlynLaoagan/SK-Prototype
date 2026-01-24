@@ -56,7 +56,7 @@ export function SignupForm() {
   const isLoading = form.formState.isSubmitting;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (values.email === 'barangay.admin.connect@system.local') {
+    if (values.email === 'barangay.admin.connect.v3@system.local') {
         toast({
             variant: "destructive",
             title: "Cannot Register",

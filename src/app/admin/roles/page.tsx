@@ -142,7 +142,7 @@ export default function RolesPage() {
                                 <Select 
                                   value={user.role} 
                                   onValueChange={(value: "member" | "admin") => handleRoleChange(user.id, value)}
-                                  disabled={user.email === 'barangay.admin.connect@system.local'}
+                                  disabled={user.email === 'barangay.admin.connect.v3@system.local'}
                                 >
                                     <SelectTrigger className="w-[120px]">
                                         <SelectValue />
@@ -156,7 +156,7 @@ export default function RolesPage() {
                             <TableCell className="text-right">
                                 <Button 
                                   onClick={() => handleSaveClick(user.id)}
-                                  disabled={user.email === 'barangay.admin.connect@system.local' || users?.find(u => u.id === user.id)?.role === user.role}
+                                  disabled={user.email === 'barangay.admin.connect.v3@system.local' || users?.find(u => u.id === user.id)?.role === user.role}
                                 >
                                   Save
                                 </Button>
