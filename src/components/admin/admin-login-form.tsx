@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -5,7 +6,7 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { useFirebase } from "@/firebase"
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
-import { doc, getDoc, setDoc } from "firebase/firestore"
+import { doc, setDoc } from "firebase/firestore"
 import { Loader } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -42,26 +43,6 @@ export function AdminLoginForm() {
 
   const isLoading = form.formState.isSubmitting;
 
-  const handleSuccessfulAdminLogin = () => {
-    toast({
-      title: "Login Successful",
-      description: "Welcome, Admin!",
-    })
-    // The redirect is now handled by the parent /login page component
-    // which listens for auth state changes and user roles.
-  }
-
-  const handleAccessDenied = async () => {
-    if (auth.currentUser) {
-      await auth.signOut();
-    }
-    toast({
-      variant: "destructive",
-      title: "Access Denied",
-      description: "You do not have administrative privileges.",
-    });
-  }
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (values.password !== ADMIN_PASSWORD) {
       toast({
@@ -73,22 +54,15 @@ export function AdminLoginForm() {
     }
 
     try {
-      // First, try to sign in with the correct, hardcoded password
-      const userCredential = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
-      const user = userCredential.user;
-
-      const userDocRef = doc(firestore, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      if (userDoc.exists() && userDoc.data().role === 'admin') {
-        handleSuccessfulAdminLogin();
-      } else {
-        // This case is unlikely if the DB is consistent, but handles it.
-        handleAccessDenied();
-      }
+      // Attempt to sign in. The guards will handle redirection and access control based on role.
+      await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
+      toast({
+        title: "Login Successful",
+        description: "Welcome, Admin! Redirecting...",
+      });
     } catch (signInError: any) {
-      // If sign-in fails, it's likely because the user doesn't exist yet.
-      // We've already verified the password, so we can proceed to create the account.
+      // If sign-in fails because the user doesn't exist, create the admin account.
+      // This is a one-time setup for the first admin login.
       if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
         try {
           const newUserCredential = await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
@@ -96,6 +70,7 @@ export function AdminLoginForm() {
           
           await updateProfile(newUser, { displayName: 'SK Admin' });
 
+          // Create the user document in Firestore with the 'admin' role.
           const userDocRef = doc(firestore, "users", newUser.uid);
           await setDoc(userDocRef, {
             id: newUser.uid,
@@ -104,15 +79,19 @@ export function AdminLoginForm() {
             role: 'admin',
           });
 
-          // Creation was successful, so log them in.
-          handleSuccessfulAdminLogin();
+          toast({
+            title: "Admin Account Created",
+            description: "Welcome, Admin! Redirecting...",
+          });
 
         } catch (createError: any) {
-           // This might happen in a race condition, but it's very unlikely.
-           // It means the account was created between the signIn and createUser calls.
+           // This might happen in a race condition if the account was created elsewhere
+           // between the signIn and createUser calls.
            if (createError.code === 'auth/email-already-in-use') {
-              // We can just try to log in again.
-              handleSuccessfulAdminLogin();
+              toast({
+                title: "Login Successful",
+                description: "Welcome, Admin! Redirecting...",
+              });
            } else {
              // Handle other potential errors during user creation
              toast({
