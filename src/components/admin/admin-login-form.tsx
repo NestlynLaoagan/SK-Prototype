@@ -1,4 +1,3 @@
-
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -8,6 +7,7 @@ import { useFirebase } from "@/firebase"
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 import { Loader } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -26,13 +26,14 @@ const formSchema = z.object({
   password: z.string().min(1, "Password is required."),
 })
 
-// Use a unique, non-public email for the admin user
-const ADMIN_EMAIL = "barangay.admin.connect@system.local";
+// Use a unique, non-public email for the admin user. Changed to force re-creation.
+const ADMIN_EMAIL = "sk.admin.bakakeng.central@system.local";
 const ADMIN_PASSWORD = "SKBAKAKENG@CCX23";
 
 export function AdminLoginForm() {
   const { auth, firestore } = useFirebase()
   const { toast } = useToast()
+  const router = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -55,18 +56,17 @@ export function AdminLoginForm() {
 
     try {
       // Attempt to sign in.
-      await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
+      await signInWithEmailAndPassword(auth, ADMIN_EMAIL, values.password);
       toast({
         title: "Login Successful",
         description: "Welcome, Admin! Redirecting...",
       });
-      // The RedirectIfAuthenticatedGuard will handle the navigation.
+      router.push('/admin');
     } catch (signInError: any) {
       if (signInError.code === 'auth/user-not-found') {
         // If the user doesn't exist, create the admin account.
-        // This is a one-time setup for the first admin login.
         try {
-          const newUserCredential = await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
+          const newUserCredential = await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, values.password);
           const newUser = newUserCredential.user;
           
           await updateProfile(newUser, { displayName: 'SK Admin' });
@@ -84,25 +84,20 @@ export function AdminLoginForm() {
             title: "Admin Account Created",
             description: "Welcome, Admin! Redirecting...",
           });
-          // The RedirectIfAuthenticatedGuard will handle the navigation.
+          router.push('/admin');
 
         } catch (createError: any) {
-           // This might happen in a race condition. If it already exists now,
-           // something is weird, but we can just tell the user to try again.
            toast({
               variant: "destructive",
               title: "Admin Setup Failed",
               description: `Could not create admin account: ${createError.message}. Please try logging in again.`,
             });
         }
-      } else if (signInError.code === 'auth/invalid-credential') {
-          // This case means the user exists in Firebase Auth, but the password is wrong.
-          // This happens if the hardcoded ADMIN_PASSWORD was changed in the code, but
-          // the user in Firebase Auth still has the old password.
+      } else if (signInError.code === 'auth/invalid-credential' || signInError.code === 'auth/wrong-password') {
           toast({
               variant: "destructive",
               title: "Password Mismatch",
-              description: "The admin account exists, but the password you entered is incorrect. The admin password in the system may have changed.",
+              description: "The admin account exists, but the password you entered is incorrect. The password may need to be reset in the system.",
           });
       }
       else {
