@@ -15,34 +15,44 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     const isLoading = isUserLoading || (user && isProfileLoading);
 
     useEffect(() => {
-        // Don't run redirection logic until all data is loaded.
+        // Wait until everything is loaded before making a routing decision
         if (isLoading) {
             return;
         }
 
-        // Case 1: No user is logged in. Redirect to the admin login page.
+        // If loading is complete and there's no user, redirect to the admin login page
         if (!user) {
             router.replace('/admin/login');
             return;
         }
-
-        // Case 2: User is logged in, but their profile doesn't exist or they are not an admin.
-        // Redirect them to the public homepage.
+        
+        // If loading is complete, a user exists, but they are not an admin
+        // (either no profile or the role is not 'admin'), redirect to the public homepage
         if (!userProfile || userProfile.role !== 'admin') {
             router.replace('/home');
             return;
         }
+        // If we reach here, the user is authenticated and is an admin, so we do nothing
+        // and allow the component to render its children.
+    }, [isLoading, user, userProfile, router]);
 
-        // Case 3: User is logged in and is an admin. Do nothing, allow rendering.
-    }, [user, userProfile, isLoading, router]);
 
-    // If the user is a confirmed admin, show the content.
-    if (!isLoading && user && userProfile?.role === 'admin') {
+    // If we are still loading, show a full-screen loader to prevent any content flicker.
+    if (isLoading) {
+        return (
+            <div className="flex h-[80vh] w-full items-center justify-center">
+                <Loader className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
+    
+    // After loading, if the user is a confirmed admin, render the protected content.
+    // The useEffect above handles all non-admin cases.
+    if (user && userProfile?.role === 'admin') {
         return <>{children}</>;
     }
 
-    // In all other cases (loading, or about to be redirected), show a loader
-    // to prevent content from flashing and to provide a better UX.
+    // This will be shown for a brief moment while the redirection from the useEffect is happening.
     return (
         <div className="flex h-[80vh] w-full items-center justify-center">
             <Loader className="h-8 w-8 animate-spin" />
