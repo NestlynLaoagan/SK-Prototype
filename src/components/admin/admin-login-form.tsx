@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -61,9 +62,8 @@ export function AdminLoginForm() {
       await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
       toast({
         title: "Login Successful",
-        description: "Welcome, Admin! Redirecting...",
+        description: "Welcome, Admin! You will be redirected shortly.",
       });
-      router.push('/admin');
     } catch (signInError: any) {
       // If sign-in fails because the user doesn't exist, we create it.
       if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
@@ -84,9 +84,8 @@ export function AdminLoginForm() {
 
           toast({
             title: "Admin Account Created",
-            description: "Welcome, Admin! Redirecting...",
+            description: "Welcome, Admin! You will be redirected shortly.",
           });
-          router.push('/admin');
 
         } catch (createError: any) {
            toast({
