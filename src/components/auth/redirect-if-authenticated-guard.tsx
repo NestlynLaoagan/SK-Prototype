@@ -19,12 +19,12 @@ export function RedirectIfAuthenticatedGuard({ children }: { children: React.Rea
     const isLoading = isUserLoading || (user && isProfileLoading);
 
     useEffect(() => {
-        // Wait until all loading is done.
+        // Wait until all loading is done before making a decision.
         if (isLoading) {
             return;
         }
 
-        // If we have a user and their profile, they shouldn't be on this page.
+        // If we have a fully loaded user and profile, redirect them.
         if (user && userProfile) {
             if (userProfile.role === 'admin') {
                 router.replace('/admin'); // Redirect admins to their dashboard.
@@ -32,19 +32,20 @@ export function RedirectIfAuthenticatedGuard({ children }: { children: React.Rea
                 router.replace('/home'); // Redirect members to the public home.
             }
         }
-
+        // If still loading, or if there's no user, the component will show a loader
+        // or the children (login form), respectively.
     }, [user, userProfile, isLoading, router]);
 
-    // While loading, or if a user is found (which will trigger a redirect),
-    // show a full-page loader to prevent the underlying page from flashing.
-    if (isLoading || user) {
-        return (
-            <div className="flex h-screen w-full items-center justify-center">
-                <Loader className="h-8 w-8 animate-spin" />
-            </div>
-        );
+    // If loading is complete and there's no user, it's safe to show the login form.
+    if (!isLoading && !user) {
+        return <>{children}</>;
     }
 
-    // If not loading and no user is found, render the children (e.g., the login form).
-    return <>{children}</>;
+    // Otherwise, show a loader. This covers both the initial loading state
+    // and the period after login before the redirect in useEffect occurs.
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <Loader className="h-8 w-8 animate-spin" />
+        </div>
+    );
 }
