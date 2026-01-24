@@ -8,7 +8,6 @@ import { useFirebase } from "@/firebase"
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 import { Loader } from "lucide-react"
-import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -34,7 +33,6 @@ const ADMIN_PASSWORD = "SKBAKAKENG@CCX23";
 export function AdminLoginForm() {
   const { auth, firestore } = useFirebase()
   const { toast } = useToast()
-  const router = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -62,7 +60,7 @@ export function AdminLoginForm() {
         title: "Login Successful",
         description: "Welcome, Admin! Redirecting...",
       });
-      router.push('/admin');
+      // The RedirectIfAuthenticatedGuard will handle the navigation.
     } catch (signInError: any) {
       if (signInError.code === 'auth/user-not-found') {
         // If the user doesn't exist, create the admin account.
@@ -86,7 +84,7 @@ export function AdminLoginForm() {
             title: "Admin Account Created",
             description: "Welcome, Admin! Redirecting...",
           });
-          router.push('/admin');
+          // The RedirectIfAuthenticatedGuard will handle the navigation.
 
         } catch (createError: any) {
            // This might happen in a race condition. If it already exists now,
