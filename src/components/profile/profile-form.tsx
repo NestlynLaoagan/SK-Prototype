@@ -88,6 +88,8 @@ export function ProfileForm() {
             calculatedAge--;
         }
         setAge(calculatedAge);
+    } else {
+        setAge(null);
     }
   }, [birthdate]);
   
@@ -180,7 +182,7 @@ export function ProfileForm() {
                                 fromYear={1930}
                                 toYear={new Date().getFullYear()}
                                 selected={field.value}
-                                onSelect={(date) => {
+                                onSelect={(date: Date | undefined) => {
                                     field.onChange(date);
                                     setIsCalendarOpen(false);
                                 }}
