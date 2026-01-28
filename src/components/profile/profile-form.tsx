@@ -182,9 +182,11 @@ export function ProfileForm() {
                                 fromYear={1930}
                                 toYear={new Date().getFullYear()}
                                 selected={field.value}
-                                onSelect={(date: Date | undefined) => {
+                                onSelect={(date) => {
+                                  if (date) {
                                     field.onChange(date);
-                                    setIsCalendarOpen(false);
+                                  }
+                                  setIsCalendarOpen(false);
                                 }}
                                 disabled={(date) =>
                                 date > new Date() || date < new Date("1900-01-01")
