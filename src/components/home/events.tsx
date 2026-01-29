@@ -177,12 +177,16 @@ export function Events() {
                     <div className="space-y-8">
                         {listedEvents.map(([month, events]) => (
                             <div key={month}>
-                                <h3 className="text-2xl font-bold text-primary mb-3">{month} {year}</h3>
-                                <div className="space-y-2">
+                                <h3 className="text-2xl font-bold text-primary mb-4">{month} {year}</h3>
+                                <div className="space-y-4">
                                     {events.map((event, index) => (
-                                        <p key={index} className="font-medium">
-                                            <span className="font-bold">{format(event.date, "MMMM d, yyyy")}</span> - {event.name}
-                                        </p>
+                                        <div key={index} className="flex items-center gap-4">
+                                            <div className="text-center bg-primary text-primary-foreground rounded-lg p-2 w-20 flex-shrink-0">
+                                                <span className="block text-sm font-bold uppercase">{format(event.date, "MMM")}</span>
+                                                <span className="block text-2xl font-bold">{format(event.date, "d")}</span>
+                                            </div>
+                                            <p className="font-medium">{event.name}</p>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
