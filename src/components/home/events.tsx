@@ -134,10 +134,10 @@ export function Events() {
                     </p>
                 </div>
                 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 items-start">
                     {isClient ? (
-                        <div className="w-full flex flex-col items-center">
-                            <Carousel setApi={setApi} className="w-full max-w-md">
+                        <div className="w-full flex flex-col items-center lg:col-span-3">
+                            <Carousel setApi={setApi} className="w-full">
                                  <div className="flex items-center justify-center relative mb-4">
                                     <CarouselPrevious className="absolute left-0 -translate-x-8 bg-primary text-primary-foreground rounded-full" />
                                     <div className="py-1 text-center text-lg font-medium">{dateRange}</div>
@@ -171,10 +171,10 @@ export function Events() {
                             </div>
                         </div>
                     ) : (
-                        <Skeleton className="w-full h-[600px] max-w-md mx-auto" />
+                        <Skeleton className="w-full h-[600px] lg:col-span-3" />
                     )}
 
-                    <div className="space-y-8">
+                    <div className="space-y-8 lg:col-span-1">
                         {listedEvents.map(([month, events]) => (
                             <div key={month}>
                                 <h3 className="text-2xl font-bold text-primary mb-4">{month} {year}</h3>
