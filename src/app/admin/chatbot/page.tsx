@@ -1,59 +1,92 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useFirebase, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { collection, doc } from "firebase/firestore";
+import type { Faq } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusCircle, MoreHorizontal, Trash2 } from "lucide-react";
+import { PlusCircle, MoreHorizontal, Trash2, Loader } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 
-const initialFaqs = [
-    { id: 1, question: "How do I get a barangay clearance?", answer: "To get a barangay clearance, please visit the barangay hall with a valid ID and pay the corresponding fee." },
-    { id: 2, question: "What are the office hours?", answer: "The barangay hall is open from Monday to Friday, 8:00 AM to 5:00 PM." },
-    { id: 3, question: "How to report an issue?", answer: "You can report issues through the feedback form on our website or by visiting the barangay hall directly." },
-];
-
-type FAQ = {
-    id: number;
-    question: string;
-    answer: string;
-}
-
 export default function ChatbotPage() {
-  const [faqs, setFaqs] = useState<FAQ[]>(initialFaqs);
+  const { firestore } = useFirebase();
   const { toast } = useToast();
+  
+  const faqsCollectionRef = useMemoFirebase(() => firestore ? collection(firestore, 'faqs') : null, [firestore]);
+  const { data: firestoreFaqs, isLoading } = useCollection<Faq>(faqsCollectionRef);
+
+  const [faqs, setFaqs] = useState<Faq[]>([]);
+  const [faqToDelete, setFaqToDelete] = useState<Faq | null>(null);
+
+  useEffect(() => {
+    if (firestoreFaqs) {
+      setFaqs(firestoreFaqs);
+    }
+  }, [firestoreFaqs]);
 
   const handleAddFaq = () => {
-    const newFaq = {
-      id: faqs.length > 0 ? Math.max(...faqs.map(f => f.id)) + 1 : 1,
-      question: "",
-      answer: "",
+    if (!firestore) return;
+    const newDocRef = doc(collection(firestore, 'faqs'));
+    const newFaq: Faq = {
+      id: newDocRef.id,
+      question: "New Question...",
+      answer: "New Answer...",
     };
-    setFaqs([...faqs, newFaq]);
+    
+    setDocumentNonBlocking(newDocRef, newFaq, {});
+    
     toast({
       title: "New FAQ added",
       description: "A new FAQ row has been added. Please fill in the details.",
     });
   };
 
-  const handleDeleteFaq = (id: number) => {
-    setFaqs(faqs.filter(faq => faq.id !== id));
+  const handleDeleteConfirm = () => {
+    if (!faqToDelete || !firestore) return;
+    const docRef = doc(firestore, 'faqs', faqToDelete.id);
+    deleteDocumentNonBlocking(docRef);
     toast({
       title: "FAQ deleted",
       description: "The FAQ has been successfully deleted.",
       variant: "destructive",
     });
+    setFaqToDelete(null);
   };
 
-  const handleFaqChange = (id: number, field: 'question' | 'answer', value: string) => {
+  const handleFaqChange = (id: string, field: 'question' | 'answer', value: string) => {
     setFaqs(faqs.map(faq => faq.id === id ? { ...faq, [field]: value } : faq));
+  };
+  
+  const handleSaveOnBlur = (id: string) => {
+    if (!firestore) return;
+    const faqToSave = faqs.find(f => f.id === id);
+    if (faqToSave) {
+        const docRef = doc(firestore, 'faqs', faqToSave.id);
+        setDocumentNonBlocking(docRef, faqToSave, { merge: true });
+        toast({
+            title: "FAQ Saved",
+            description: "Your changes have been saved automatically.",
+        })
+    }
   };
 
   return (
@@ -67,7 +100,7 @@ export default function ChatbotPage() {
         <CardHeader className="flex flex-row items-center justify-between">
             <div>
                 <CardTitle>Manage FAQs</CardTitle>
-                <CardDescription>Add, edit, or delete frequently asked questions.</CardDescription>
+                <CardDescription>Add, edit, or delete frequently asked questions. Changes are saved automatically.</CardDescription>
             </div>
             <Button onClick={handleAddFaq}>
                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -84,13 +117,30 @@ export default function ChatbotPage() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {faqs.map(faq => (
+                    {isLoading && (
+                        <TableRow>
+                            <TableCell colSpan={3} className="text-center">
+                                <div className="flex justify-center p-8">
+                                    <Loader className="h-6 w-6 animate-spin" />
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    )}
+                    {!isLoading && faqs.map(faq => (
                         <TableRow key={faq.id}>
                             <TableCell className="font-medium">
-                                <Textarea value={faq.question} onChange={(e) => handleFaqChange(faq.id, 'question', e.target.value)} className="h-24" />
+                                <Textarea 
+                                    value={faq.question} 
+                                    onChange={(e) => handleFaqChange(faq.id, 'question', e.target.value)} 
+                                    onBlur={() => handleSaveOnBlur(faq.id)}
+                                    className="h-24" />
                             </TableCell>
                             <TableCell>
-                                <Textarea value={faq.answer} onChange={(e) => handleFaqChange(faq.id, 'answer', e.target.value)} className="h-24" />
+                                <Textarea 
+                                    value={faq.answer} 
+                                    onChange={(e) => handleFaqChange(faq.id, 'answer', e.target.value)} 
+                                    onBlur={() => handleSaveOnBlur(faq.id)}
+                                    className="h-24" />
                             </TableCell>
                             <TableCell className="text-right">
                                <DropdownMenu>
@@ -100,7 +150,7 @@ export default function ChatbotPage() {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => handleDeleteFaq(faq.id)} className="text-destructive">
+                                        <DropdownMenuItem onClick={() => setFaqToDelete(faq)} className="text-destructive">
                                             <Trash2 className="mr-2 h-4 w-4" />
                                             Delete
                                         </DropdownMenuItem>
@@ -113,6 +163,21 @@ export default function ChatbotPage() {
             </Table>
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!faqToDelete} onOpenChange={(open) => !open && setFaqToDelete(null)}>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete this FAQ.
+                  </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setFaqToDelete(null)}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteConfirm}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -26,3 +26,8 @@ export type Announcement = {
     date: string; // ISO 8601 date string
 };
     
+export type Faq = {
+    id: string;
+    question: string;
+    answer: string;
+};
