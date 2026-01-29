@@ -102,14 +102,15 @@ export function Events() {
         caption: 'flex justify-center pt-1 relative items-center',
         caption_label: "text-sm font-medium uppercase bg-primary/90 text-primary-foreground py-2 px-4 rounded-t-md",
         nav: "hidden",
-        table: "w-full border-collapse",
-        head_row: "", // Use default table display
-        head_cell: "text-muted-foreground w-9 font-normal text-[0.8rem]",
-        row: "", // Use default table display
-        cell: "h-9 w-9 text-center text-sm p-0 relative",
-        day: "h-8 w-8 p-0 font-normal rounded-full inline-flex items-center justify-center",
-        day_selected: "bg-primary/90 text-primary-foreground rounded-full",
-        day_today: "bg-accent text-accent-foreground rounded-full",
+        table: "w-full border-collapse space-y-1",
+        head_row: "flex",
+        head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
+        row: "flex w-full mt-2",
+        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
+        day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-full inline-flex items-center justify-center",
+        day_selected:
+          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+        day_today: "bg-accent text-accent-foreground",
         day_outside: "text-muted-foreground opacity-50 hidden",
         day_disabled: "text-muted-foreground opacity-50",
     }
@@ -134,7 +135,7 @@ export function Events() {
                     </p>
                 </div>
                 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
                     {isClient ? (
                         <div className="w-full flex flex-col items-center lg:col-span-3">
                             <Carousel setApi={setApi} className="w-full">
