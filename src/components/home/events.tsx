@@ -157,9 +157,14 @@ export function Events() {
                                                             modifiers={modifiers}
                                                             modifiersClassNames={modifiersClassNames}
                                                             components={{
-                                                                CaptionLabel: ({ displayMonth }) => (
-                                                                    <div className={calendarClassNames.caption_label}>{format(displayMonth, "MMMM").toUpperCase()}</div>
-                                                                ),
+                                                                CaptionLabel: ({ displayMonth }) => {
+                                                                    if (!(displayMonth instanceof Date) || isNaN(displayMonth.getTime())) {
+                                                                        return null;
+                                                                    }
+                                                                    return (
+                                                                        <div className={calendarClassNames.caption_label}>{format(displayMonth, "MMMM").toUpperCase()}</div>
+                                                                    );
+                                                                },
                                                             }}
                                                         />
                                                     </Card>
