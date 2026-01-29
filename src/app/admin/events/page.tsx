@@ -130,8 +130,8 @@ export default function EventsPage() {
                     {events.map(event => (
                         <TableRow key={event.id}>
                             <TableCell className="font-medium">{event.name}</TableCell>
-                            <TableCell>{formatDateTime(event.start)}</TableCell>
-                            <TableCell>{formatDateTime(event.end)}</TableCell>
+                            <TableCell className="text-xs">{formatDateTime(event.start)}</TableCell>
+                            <TableCell className="text-xs">{formatDateTime(event.end)}</TableCell>
                             <TableCell>{event.status}</TableCell>
                             <TableCell className="text-right">
                                 <DropdownMenu>
