@@ -78,6 +78,7 @@ export function ProfileForm() {
   });
 
   const birthdate = form.watch("birthdate");
+  const { setValue } = form;
 
   useEffect(() => {
     if (birthdate) {
@@ -88,10 +89,21 @@ export function ProfileForm() {
             calculatedAge--;
         }
         setAge(calculatedAge);
+
+        if (calculatedAge >= 16 && calculatedAge <= 17) {
+            setValue('youthAgeGroup', '16-17', { shouldValidate: true });
+        } else if (calculatedAge >= 18 && calculatedAge <= 24) {
+            setValue('youthAgeGroup', '18-24', { shouldValidate: true });
+        } else if (calculatedAge >= 25 && calculatedAge <= 30) {
+            setValue('youthAgeGroup', '25-30', { shouldValidate: true });
+        } else {
+            setValue('youthAgeGroup', '', { shouldValidate: true });
+        }
     } else {
         setAge(null);
+        setValue('youthAgeGroup', '', { shouldValidate: true });
     }
-  }, [birthdate]);
+  }, [birthdate, setValue]);
   
    const youthClassification = form.watch("youthClassification");
    useEffect(() => {
@@ -293,7 +305,7 @@ export function ProfileForm() {
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Youth Age Group</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select your age group" />
