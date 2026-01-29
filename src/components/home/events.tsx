@@ -100,14 +100,14 @@ export function Events() {
     const calendarClassNames = {
         month: 'space-y-4',
         caption: 'flex justify-center pt-1 relative items-center',
-        caption_label: "text-sm font-medium uppercase bg-primary text-primary-foreground py-2 px-4 rounded-md",
+        caption_label: "text-sm font-medium uppercase bg-primary/90 text-primary-foreground py-2 px-4 rounded-t-md",
         nav: "hidden",
-        table: "w-full border-collapse space-y-1",
-        head_row: "flex",
-        head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
-        row: "flex w-full mt-2",
-        cell: "h-9 w-9 text-center text-sm p-0 relative flex items-center justify-center",
-        day: "h-8 w-8 p-0 font-normal rounded-full flex items-center justify-center",
+        table: "w-full border-collapse",
+        head_row: "", // Use default table display
+        head_cell: "text-muted-foreground w-9 font-normal text-[0.8rem]",
+        row: "", // Use default table display
+        cell: "h-9 w-9 text-center text-sm p-0 relative",
+        day: "h-8 w-8 p-0 font-normal rounded-full inline-flex items-center justify-center",
         day_selected: "bg-primary/90 text-primary-foreground rounded-full",
         day_today: "bg-accent text-accent-foreground rounded-full",
         day_outside: "text-muted-foreground opacity-50 hidden",
@@ -146,16 +146,21 @@ export function Events() {
                                 <CarouselContent>
                                     {monthChunks.map((chunk, index) => (
                                         <CarouselItem key={index}>
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-1">
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-1">
                                                 {chunk.map((month) => (
-                                                    <Card key={month.toISOString()} className="shadow-none border-0 p-0">
+                                                    <Card key={month.toISOString()}>
                                                         <Calendar
                                                             month={month}
                                                             showOutsideDays={false}
-                                                            className="p-0"
+                                                            className="p-3"
                                                             classNames={calendarClassNames}
                                                             modifiers={modifiers}
                                                             modifiersClassNames={modifiersClassNames}
+                                                            components={{
+                                                                CaptionLabel: ({ displayMonth }) => (
+                                                                    <div className={calendarClassNames.caption_label}>{format(displayMonth, "MMMM").toUpperCase()}</div>
+                                                                ),
+                                                            }}
                                                         />
                                                     </Card>
                                                 ))}
