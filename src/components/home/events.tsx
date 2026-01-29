@@ -151,7 +151,7 @@ export function Events() {
           </div>
 
           {/* Events List */}
-          <div className="pt-12 space-y-8">
+          <div className="pt-12 flex flex-col justify-between">
              <div>
               <h2 className="text-4xl text-primary mb-4 font-headline">May {year}</h2>
               <ul className="space-y-2 list-disc list-inside text-muted-foreground">
