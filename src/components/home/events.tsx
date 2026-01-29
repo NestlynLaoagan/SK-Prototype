@@ -98,21 +98,21 @@ export function Events() {
 
 
     const calendarClassNames = {
-        month: 'space-y-4',
-        caption: 'flex justify-center pt-1 relative items-center',
-        caption_label: "text-sm font-medium uppercase bg-primary/90 text-primary-foreground py-2 px-4 rounded-t-md",
+        month: 'space-y-2',
+        caption: 'flex justify-center relative items-center px-1 pb-2',
+        caption_label: "text-sm font-medium uppercase bg-accent text-accent-foreground text-center py-2 px-4 rounded-md w-full",
         nav: "hidden",
-        table: "w-full border-collapse space-y-1",
-        head_row: "flex",
-        head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
-        row: "flex w-full mt-2",
-        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
-        day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-full inline-flex items-center justify-center",
-        day_selected:
-          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+        table: "w-full border-collapse",
+        head_row: "",
+        head_cell: "text-muted-foreground font-normal text-[0.8rem] w-8 pb-1 text-center",
+        row: "w-full",
+        cell: "text-center text-sm p-0",
+        day: "h-8 w-8 p-0 font-normal rounded-full inline-flex items-center justify-center hover:bg-accent",
+        day_selected: "bg-primary text-primary-foreground",
         day_today: "bg-accent text-accent-foreground",
-        day_outside: "text-muted-foreground opacity-50 hidden",
+        day_outside: "opacity-0 select-none",
         day_disabled: "text-muted-foreground opacity-50",
+        day_hidden: 'invisible',
     }
     
     const modifiers = {
@@ -120,10 +120,8 @@ export function Events() {
     };
     
     const modifiersClassNames = {
-        event: 'bg-primary text-primary-foreground rounded-full',
+        event: 'bg-primary text-primary-foreground',
     };
-
-    const listedEvents = Object.entries(eventsByMonth).filter(([, events]) => events.length > 0);
 
     return (
         <section id="events" className="w-full py-16 md:py-24 lg:py-32">
@@ -135,25 +133,25 @@ export function Events() {
                     </p>
                 </div>
                 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+                <div className="w-full max-w-5xl mx-auto">
                     {isClient ? (
-                        <div className="w-full flex flex-col items-center lg:col-span-3">
+                        <div className="w-full flex flex-col items-center">
                             <Carousel setApi={setApi} className="w-full">
                                  <div className="flex items-center justify-center relative mb-4">
-                                    <CarouselPrevious className="absolute left-0 -translate-x-8 bg-primary text-primary-foreground rounded-full" />
+                                    <CarouselPrevious className="absolute left-0 -translate-x-12 bg-muted text-muted-foreground rounded-full hover:bg-primary hover:text-primary-foreground" />
                                     <div className="py-1 text-center text-lg font-medium">{dateRange}</div>
-                                    <CarouselNext className="absolute right-0 translate-x-8 bg-primary text-primary-foreground rounded-full" />
+                                    <CarouselNext className="absolute right-0 translate-x-12 bg-primary text-primary-foreground rounded-full" />
                                 </div>
                                 <CarouselContent>
                                     {monthChunks.map((chunk, index) => (
                                         <CarouselItem key={index}>
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-1">
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-1">
                                                 {chunk.map((month) => (
-                                                    <Card key={month.toISOString()}>
+                                                    <Card key={month.toISOString()} className="p-2">
                                                         <Calendar
                                                             month={month}
-                                                            showOutsideDays={false}
-                                                            className="p-3"
+                                                            showOutsideDays={true}
+                                                            className="p-0"
                                                             classNames={calendarClassNames}
                                                             modifiers={modifiers}
                                                             modifiersClassNames={modifiersClassNames}
@@ -175,34 +173,15 @@ export function Events() {
                                     ))}
                                 </CarouselContent>
                             </Carousel>
-                             <div className="flex justify-center gap-2 mt-4">
+                             <div className="flex justify-center gap-2 mt-6">
                                 {Array.from({ length: count }).map((_, index) => (
-                                    <button key={index} onClick={() => api?.scrollTo(index)} className={`h-2 w-2 rounded-full transition-colors ${index === current ? 'bg-primary' : 'bg-muted hover:bg-muted-foreground/50'}`} />
+                                    <button key={index} onClick={() => api?.scrollTo(index)} className={`h-2.5 w-2.5 rounded-full transition-colors ${index === current ? 'bg-primary' : 'bg-muted hover:bg-muted-foreground/50'}`} />
                                 ))}
                             </div>
                         </div>
                     ) : (
-                        <Skeleton className="w-full h-[600px] lg:col-span-3" />
+                        <Skeleton className="w-full h-[600px]" />
                     )}
-
-                    <div className="space-y-8 lg:col-span-1">
-                        {listedEvents.map(([month, events]) => (
-                            <div key={month}>
-                                <h3 className="text-2xl font-bold text-primary mb-4">{month} {year}</h3>
-                                <div className="space-y-4">
-                                    {events.map((event, index) => (
-                                        <div key={index} className="flex items-center gap-4">
-                                            <div className="text-center bg-primary text-primary-foreground rounded-lg p-2 w-20 flex-shrink-0">
-                                                <span className="block text-sm font-bold uppercase">{format(event.date, "MMM")}</span>
-                                                <span className="block text-2xl font-bold">{format(event.date, "d")}</span>
-                                            </div>
-                                            <p className="font-medium">{event.name}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
                 </div>
             </div>
         </section>
