@@ -8,7 +8,9 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { CalendarIcon, Check, Loader } from "lucide-react";
 import { useFirebase, useUser, setDocumentNonBlocking } from "@/firebase";
-import { doc, updateProfile } from "firebase/firestore";
+import { doc } from "firebase/firestore";
+import { updateProfile } from "firebase/auth";
+
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -406,6 +408,7 @@ export function ProfileForm() {
                         <FormMessage />
                         </FormItem>
                     )}
+                />
             )}
              <FormField
                 control={form.control}
