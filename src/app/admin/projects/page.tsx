@@ -37,6 +37,8 @@ export type Project = {
     name: string;
     status: string;
     budget: string;
+    description: string;
+    targetDate: string;
 };
 
 type AccomplishedProject = {
@@ -47,9 +49,9 @@ type AccomplishedProject = {
 };
 
 const initialUpcomingProjects: Project[] = [
-    { id: 1, name: "Community Garden Phase 2", status: "In Progress", budget: "₱50,000" },
-    { id: 2, name: "Youth Sports Fest 2025", status: "Planning", budget: "₱120,000" },
-    { id: 3, name: "Barangay Hall Repainting", status: "Pending Approval", budget: "₱30,000" },
+    { id: 1, name: "Community Garden Phase 2", status: "In Progress", budget: "₱50,000", description: "Phase 2 of the community garden project.", targetDate: "2025-06-30" },
+    { id: 2, name: "Youth Sports Fest 2025", status: "Planning", budget: "₱120,000", description: "Annual sports festival for the youth.", targetDate: "2025-04-15" },
+    { id: 3, name: "Barangay Hall Repainting", status: "Pending Approval", budget: "₱30,000", description: "Repainting of the barangay hall.", targetDate: "2025-03-01" },
 ];
 
 const initialAccomplishedProjects: AccomplishedProject[] = [
@@ -78,15 +80,27 @@ export default function ProjectsPage() {
     setIsFormOpen(true);
   }
 
-  const handleSaveProject = (savedProjectData: Omit<Project, 'id'> & { id?: number }) => {
+  const handleSaveProject = (savedProjectData: Omit<Project, 'id' | 'targetDate'> & { id?: number; targetDate: Date | string }) => {
+    
+    const projectWithDateString = {
+        ...savedProjectData,
+        targetDate: typeof savedProjectData.targetDate === 'string' 
+            ? savedProjectData.targetDate 
+            : format(savedProjectData.targetDate, 'yyyy-MM-dd')
+    };
+
     if (savedProjectData.id) {
         // Editing existing project
-        setUpcomingProjects(upcomingProjects.map(p => p.id === savedProjectData.id ? { ...p, ...savedProjectData, id: p.id } : p));
+        setUpcomingProjects(upcomingProjects.map(p => p.id === savedProjectData.id ? { ...p, ...projectWithDateString, id: p.id } : p));
     } else {
         // Adding new project
         const newProject: Project = {
-            ...(savedProjectData as Omit<Project, 'id'>),
             id: Math.max(...upcomingProjects.map(p => p.id), 0) + 1,
+            name: projectWithDateString.name,
+            status: projectWithDateString.status,
+            budget: projectWithDateString.budget,
+            description: projectWithDateString.description,
+            targetDate: projectWithDateString.targetDate
         };
         setUpcomingProjects([...upcomingProjects, newProject]);
     }
@@ -149,6 +163,7 @@ export default function ProjectsPage() {
                 <TableHeader>
                     <TableRow>
                         <TableHead>Project Name</TableHead>
+                        <TableHead>Target Date</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Budget</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
@@ -158,6 +173,7 @@ export default function ProjectsPage() {
                     {upcomingProjects.map(project => (
                         <TableRow key={project.id}>
                             <TableCell className="font-medium">{project.name}</TableCell>
+                            <TableCell>{format(new Date(project.targetDate), "MMM d, yyyy")}</TableCell>
                             <TableCell>{project.status}</TableCell>
                             <TableCell>{project.budget}</TableCell>
                             <TableCell className="text-right">

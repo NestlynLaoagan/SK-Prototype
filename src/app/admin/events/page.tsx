@@ -4,16 +4,34 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusCircle, MoreHorizontal, Trash2 } from "lucide-react";
+import { PlusCircle, MoreHorizontal, Trash2, Edit } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { EventForm } from "@/components/admin/event-form";
+import { format } from 'date-fns';
 
-type Event = {
+export type Event = {
     id: number;
     name: string;
     start: string;
@@ -22,37 +40,61 @@ type Event = {
 };
 
 const initialEvents: Event[] = [
-    { id: 1, name: "Barangay Assembly Day", start: "2024-10-28 09:00", end: "2024-10-28 12:00", status: "Upcoming" },
-    { id: 2, name: "Community Garden Project Launch", start: "2024-11-05 08:00", end: "2024-11-05 11:00", status: "Upcoming" },
-    { id: 3, name: "Free Anti-Rabies Vaccination", start: "2024-11-15 09:00", end: "2024-11-15 16:00", status: "Upcoming" },
+    { id: 1, name: "Barangay Assembly Day", start: "2024-10-28T09:00", end: "2024-10-28T12:00", status: "Upcoming" },
+    { id: 2, name: "Community Garden Project Launch", start: "2024-11-05T08:00", end: "2024-11-05T11:00", status: "Upcoming" },
+    { id: 3, name: "Free Anti-Rabies Vaccination", start: "2024-11-15T09:00", end: "2024-11-15T16:00", status: "Upcoming" },
 ];
 
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const { toast } = useToast();
+  
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [eventToEdit, setEventToEdit] = useState<Event | undefined>(undefined);
+  const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
 
   const handleAddEvent = () => {
-    const newEvent: Event = {
-      id: events.length > 0 ? Math.max(...events.map(e => e.id)) + 1 : 1,
-      name: "New Event",
-      start: new Date().toISOString().slice(0, 16).replace('T', ' '),
-      end: new Date().toISOString().slice(0, 16).replace('T', ' '),
-      status: "Planning",
-    };
-    setEvents([...events, newEvent]);
-    toast({
-      title: "New event added",
-      description: "A new event has been added. You can edit it in the table.",
-    });
+    setEventToEdit(undefined);
+    setIsFormOpen(true);
   };
 
-  const handleDeleteEvent = (id: number) => {
-    setEvents(events.filter(event => event.id !== id));
+  const handleEditClick = (event: Event) => {
+    setEventToEdit(event);
+    setIsFormOpen(true);
+  };
+
+  const handleSaveEvent = (savedEventData: Omit<Event, 'id'> & { id?: number }) => {
+    if (savedEventData.id) {
+        // Editing existing event
+        setEvents(events.map(e => e.id === savedEventData.id ? { ...e, ...savedEventData, id: e.id } : e));
+    } else {
+        // Adding new event
+        const newEvent: Event = {
+            ...(savedEventData as Omit<Event, 'id'>),
+            id: events.length > 0 ? Math.max(...events.map(e => e.id)) + 1 : 1,
+        };
+        setEvents([...events, newEvent]);
+    }
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!eventToDelete) return;
+    setEvents(events.filter(event => event.id !== eventToDelete.id));
     toast({
       title: "Event deleted",
-      description: "The event has been successfully deleted.",
+      description: `The event "${eventToDelete.name}" has been successfully deleted.`,
       variant: "destructive",
     });
+    setEventToDelete(null);
+  };
+  
+  const formatDateTime = (dateTimeString: string) => {
+    if (!dateTimeString) return 'N/A';
+    try {
+        return format(new Date(dateTimeString), "MMM d, yyyy h:mm a");
+    } catch (e) {
+        return 'Invalid Date';
+    }
   };
 
   return (
@@ -88,8 +130,8 @@ export default function EventsPage() {
                     {events.map(event => (
                         <TableRow key={event.id}>
                             <TableCell className="font-medium">{event.name}</TableCell>
-                            <TableCell>{event.start}</TableCell>
-                            <TableCell>{event.end}</TableCell>
+                            <TableCell>{formatDateTime(event.start)}</TableCell>
+                            <TableCell>{formatDateTime(event.end)}</TableCell>
                             <TableCell>{event.status}</TableCell>
                             <TableCell className="text-right">
                                 <DropdownMenu>
@@ -99,7 +141,11 @@ export default function EventsPage() {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => handleDeleteEvent(event.id)} className="text-destructive">
+                                        <DropdownMenuItem onClick={() => handleEditClick(event)}>
+                                            <Edit className="mr-2 h-4 w-4" />
+                                            Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setEventToDelete(event)} className="text-destructive">
                                             <Trash2 className="mr-2 h-4 w-4" />
                                             Delete
                                         </DropdownMenuItem>
@@ -112,6 +158,37 @@ export default function EventsPage() {
             </Table>
         </CardContent>
       </Card>
+
+      {/* Dialog for Add/Edit Form */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                  <DialogTitle>{eventToEdit ? "Edit Event" : "Add New Event"}</DialogTitle>
+              </DialogHeader>
+              <EventForm
+                  key={eventToEdit?.id || 'new'}
+                  event={eventToEdit} 
+                  onSave={handleSaveEvent}
+                  onClose={() => setIsFormOpen(false)} 
+              />
+          </DialogContent>
+      </Dialog>
+
+      {/* Alert Dialog for Delete Confirmation */}
+      <AlertDialog open={!!eventToDelete} onOpenChange={(open) => !open && setEventToDelete(null)}>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete the event titled &quot;{eventToDelete?.name}&quot;.
+                  </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setEventToDelete(null)}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteConfirm}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

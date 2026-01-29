@@ -121,6 +121,10 @@
           "type": "string",
           "description": "A description of the project."
         },
+        "budget": {
+            "type": "string",
+            "description": "The allocated budget for the project."
+        },
         "startDate": {
           "type": "string",
           "description": "The start date of the project.",
