@@ -3,6 +3,9 @@ import React, { useState, useEffect } from "react"
 import { Calendar } from "@/components/ui/calendar"
 import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel"
+import { format } from 'date-fns'
+
 
 const year = 2026;
 const months = Array.from({ length: 12 }, (_, i) => new Date(year, i, 1));
@@ -51,13 +54,48 @@ const eventsByMonth: Record<string, { date: Date, name: string }[]> = {
 
 const allEventDays = Object.values(eventsByMonth).flat().map(event => event.date);
 
-
 export function Events() {
     const [isClient, setIsClient] = useState(false);
+    const [api, setApi] = useState<CarouselApi>()
+    const [current, setCurrent] = useState(0)
+    const [count, setCount] = useState(0)
+    const [dateRange, setDateRange] = useState("")
 
     useEffect(() => {
         setIsClient(true);
     }, []);
+
+    const monthChunks = React.useMemo(() => {
+        const chunks = [];
+        for (let i = 0; i < months.length; i += 6) {
+            chunks.push(months.slice(i, i + 6));
+        }
+        return chunks;
+    }, []);
+
+    const updateDateRange = React.useCallback((index: number) => {
+        if (!monthChunks[index]) return;
+        const startMonth = monthChunks[index][0];
+        const endMonth = monthChunks[index][monthChunks[index].length - 1];
+        setDateRange(`${format(startMonth, "MMMM")} - ${format(endMonth, "MMMM")} ${year}`);
+    }, [monthChunks]);
+
+    useEffect(() => {
+        if (!api) {
+            return
+        }
+
+        setCount(api.scrollSnapList().length)
+        setCurrent(api.selectedScrollSnap())
+        updateDateRange(api.selectedScrollSnap())
+
+        api.on("select", () => {
+            const currentSnap = api.selectedScrollSnap()
+            setCurrent(currentSnap)
+            updateDateRange(currentSnap)
+        })
+    }, [api, updateDateRange])
+
 
     const calendarClassNames = {
         month: 'space-y-4',
@@ -84,35 +122,72 @@ export function Events() {
         event: 'bg-primary text-primary-foreground rounded-full',
     };
 
+    const listedEvents = Object.entries(eventsByMonth).filter(([, events]) => events.length > 0);
+
     return (
         <section id="events" className="w-full py-16 md:py-24 lg:py-32">
             <div className="container mx-auto px-4 md:px-6">
                 <div className="flex flex-col items-center text-center space-y-3 mb-12">
-                    <h2 className="text-3xl font-headline font-bold tracking-tighter sm:text-4xl md:text-5xl">Community Events Calendar</h2>
+                    <h2 className="text-3xl font-headline font-bold tracking-tighter sm:text-4xl md:text-5xl">Events</h2>
                     <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                        Stay up-to-date with all the happenings in Barangay Bakakeng Central for 2026.
+                        This calendar outlines the scheduled events at the Bakakeng Central Basketball Court.
                     </p>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8">
-                    {isClient ? months.map((month) => (
-                        <Card key={month.toISOString()} className="shadow-md p-3">
-                            <Calendar
-                                month={month}
-                                showOutsideDays={false}
-                                className="p-0"
-                                classNames={calendarClassNames}
-                                modifiers={modifiers}
-                                modifiersClassNames={modifiersClassNames}
-                            />
-                        </Card>
-                    )) : (
-                        Array.from({ length: 12 }).map((_, index) => (
-                            <Card key={index} className="shadow-md p-3 h-[290px]">
-                                <Skeleton className="w-full h-full" />
-                            </Card>
-                        ))
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+                    {isClient ? (
+                        <div className="w-full flex flex-col items-center">
+                            <Carousel setApi={setApi} className="w-full max-w-md">
+                                 <div className="flex items-center justify-center relative mb-4">
+                                    <CarouselPrevious className="absolute left-0 -translate-x-8 bg-primary text-primary-foreground rounded-full" />
+                                    <div className="py-1 text-center text-lg font-medium">{dateRange}</div>
+                                    <CarouselNext className="absolute right-0 translate-x-8 bg-primary text-primary-foreground rounded-full" />
+                                </div>
+                                <CarouselContent>
+                                    {monthChunks.map((chunk, index) => (
+                                        <CarouselItem key={index}>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-1">
+                                                {chunk.map((month) => (
+                                                    <Card key={month.toISOString()} className="shadow-none border-0 p-0">
+                                                        <Calendar
+                                                            month={month}
+                                                            showOutsideDays={false}
+                                                            className="p-0"
+                                                            classNames={calendarClassNames}
+                                                            modifiers={modifiers}
+                                                            modifiersClassNames={modifiersClassNames}
+                                                        />
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        </CarouselItem>
+                                    ))}
+                                </CarouselContent>
+                            </Carousel>
+                             <div className="flex justify-center gap-2 mt-4">
+                                {Array.from({ length: count }).map((_, index) => (
+                                    <button key={index} onClick={() => api?.scrollTo(index)} className={`h-2 w-2 rounded-full transition-colors ${index === current ? 'bg-primary' : 'bg-muted hover:bg-muted-foreground/50'}`} />
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <Skeleton className="w-full h-[600px] max-w-md mx-auto" />
                     )}
+
+                    <div className="space-y-8">
+                        {listedEvents.map(([month, events]) => (
+                            <div key={month}>
+                                <h3 className="text-2xl font-bold text-primary mb-3">{month} {year}</h3>
+                                <div className="space-y-2">
+                                    {events.map((event, index) => (
+                                        <p key={index} className="font-medium">
+                                            <span className="font-bold">{format(event.date, "MMMM d, yyyy")}</span> - {event.name}
+                                        </p>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </section>
