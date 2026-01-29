@@ -31,6 +31,14 @@
         "gender": {
             "type": "string"
         },
+        "address": {
+          "type": "string",
+          "description": "The user's full address."
+        },
+        "contactNumber": {
+            "type": "string",
+            "description": "The user's contact phone number."
+        },
         "civilStatus": {
           "type": "string",
           "description": "The civil status of the user (Single, Married, Divorced, Widowed, Separated, Live-in)."
