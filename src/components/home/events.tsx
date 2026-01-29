@@ -22,6 +22,15 @@ export function Events() {
 
   // Event dates for highlighting (example: {month: 0-11, day: 1-31})
   const eventDates = [
+    { month: 4, day: 20 }, // May 20, Regalo Eskwela
+    { month: 5, day: 5 },  // Jun 5, Tree Planting
+    { month: 6, day: 15 }, // Jul 15, First Aid Workshop
+    { month: 7, day: 12 }, // Aug 12, Youth Got Talent
+    { month: 8, day: 1 },  // Sep 1, Liga
+    { month: 8, day: 2 },  // Sep 2, Liga
+    { month: 8, day: 3 },  // Sep 3, Liga
+    { month: 8, day: 4 },  // Sep 4, Liga
+    { month: 8, day: 5 },  // Sep 5, Liga
     { month: 10, day: 18 }, // Nov 18
     { month: 10, day: 19 }, // Nov 19
     { month: 10, day: 20 }, // Nov 20
@@ -54,7 +63,7 @@ export function Events() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-12 max-w-7xl mx-auto">
           {/* Calendar Carousel Section */}
           <div>
             <div className="flex items-center justify-between mb-4">
@@ -142,8 +151,48 @@ export function Events() {
           </div>
 
           {/* Events List */}
-          <div className="pt-12">
-            <div className="mb-8">
+          <div className="pt-12 space-y-8">
+             <div>
+              <h2 className="text-4xl text-primary mb-4 font-headline">May {year}</h2>
+              <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+                <li>
+                  <span className="font-bold text-foreground">May 20, {year}</span> - Regalo Eskwela
+                </li>
+              </ul>
+            </div>
+             <div>
+              <h2 className="text-4xl text-primary mb-4 font-headline">June {year}</h2>
+              <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+                <li>
+                  <span className="font-bold text-foreground">June 5, {year}</span> - Tree Planting
+                </li>
+              </ul>
+            </div>
+             <div>
+              <h2 className="text-4xl text-primary mb-4 font-headline">July {year}</h2>
+              <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+                <li>
+                  <span className="font-bold text-foreground">July 15, {year}</span> - First Aid Workshop
+                </li>
+              </ul>
+            </div>
+             <div>
+              <h2 className="text-4xl text-primary mb-4 font-headline">August {year}</h2>
+              <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+                <li>
+                  <span className="font-bold text-foreground">August 12, {year}</span> - Youth Got Talent
+                </li>
+              </ul>
+            </div>
+             <div>
+              <h2 className="text-4xl text-primary mb-4 font-headline">September {year}</h2>
+              <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+                <li>
+                  <span className="font-bold text-foreground">September 1-5, {year}</span> - Liga (Sportsfest)
+                </li>
+              </ul>
+            </div>
+            <div>
               <h2 className="text-4xl text-primary mb-4 font-headline">November {year}</h2>
               <ul className="space-y-2 list-disc list-inside text-muted-foreground">
                 <li>
