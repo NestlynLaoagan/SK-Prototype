@@ -205,7 +205,10 @@ export function SettingsForm() {
                                 />
                         </div>
 
-                        <Button type="submit">Save Changes</Button>
+                        <div className="flex gap-2">
+                            <Button type="submit">Save Changes</Button>
+                            <Button type="button" variant="outline" onClick={() => router.push('/home')}>Cancel</Button>
+                        </div>
                     </form>
                 </Form>
             </CardContent>
