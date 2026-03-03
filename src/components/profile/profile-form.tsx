@@ -6,7 +6,7 @@ import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, Check, Loader } from "lucide-react";
+import { Check, Loader } from "lucide-react";
 import { useFirebase, useUser, setDocumentNonBlocking } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
@@ -32,8 +32,6 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { AlertDialog, AlertDialogContent } from "@/components/ui/alert-dialog";
 import { Textarea } from "../ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -74,7 +72,6 @@ export function ProfileForm() {
   const { user, isUserLoading } = useUser();
   const [showSpecialNeeds, setShowSpecialNeeds] = useState(false);
   const [age, setAge] = useState<number | null>(null);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -243,54 +240,22 @@ export function ProfileForm() {
                     control={form.control}
                     name="birthdate"
                     render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                        <FormLabel>Birthday</FormLabel>
-                        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                            <PopoverTrigger asChild>
+                        <FormItem className="flex flex-col justify-end">
+                            <FormLabel>Birthday</FormLabel>
                             <FormControl>
-                                <Button
-                                variant={"outline"}
-                                className={cn(
-                                    "w-full justify-start pl-3 text-left font-normal",
-                                    !field.value && "text-muted-foreground"
-                                )}
-                                >
-                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                            </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                    mode="single"
-                                    captionLayout="dropdown"
-                                    fromYear={1930}
-                                    toYear={new Date().getFullYear()}
-                                    selected={field.value}
-                                    onSelect={(date) => {
-                                      if (date) {
-                                        field.onChange(date);
-                                      }
-                                    }}
-                                    disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                                    initialFocus
-                                    weekStartsOn={1}
-                                    formatters={{
-                                        formatWeekdayName: (day) => format(day, "EE"),
+                                <Input
+                                    type="date"
+                                    value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
+                                    onChange={(e) => {
+                                        if (e.target.value) {
+                                            field.onChange(new Date(e.target.value + 'T00:00:00'));
+                                        } else {
+                                            field.onChange(null);
+                                        }
                                     }}
                                 />
-                                <div className="flex items-center gap-2 border-t p-3">
-                                    <Input
-                                        readOnly
-                                        value={field.value ? format(field.value, "dd / MM / yyyy") : ""}
-                                        placeholder="dd / mm / yyyy"
-                                        className="text-center bg-background"
-                                    />
-                                    <Button type="button" onClick={() => setIsCalendarOpen(false)}>Set Date</Button>
-                                </div>
-                            </PopoverContent>
-                        </Popover>
-                        <FormMessage />
+                            </FormControl>
+                            <FormMessage />
                         </FormItem>
                     )}
                 />
