@@ -19,7 +19,7 @@ export function Projects() {
   const [selectedIndex, setSelectedIndex] = React.useState(0)
 
   const plugin = React.useRef(
-    Autoplay({ delay: 3000, stopOnInteraction: false })
+    Autoplay({ delay: 3000, stopOnInteraction: true, stopOnMouseEnter: true })
   )
 
   React.useEffect(() => {
@@ -57,7 +57,7 @@ export function Projects() {
                     plugins={[plugin.current]}
                     className="w-full"
                     onMouseEnter={plugin.current.stop}
-                    onMouseLeave={plugin.current.play}
+                    onMouseLeave={() => plugin.current.play(true)}
                 >
                     <CarouselContent>
                     {PlaceHolderImages.map((img, index) => (
@@ -91,7 +91,7 @@ export function Projects() {
                                         plugin.current.reset();
                                     }}
                                 >
-                                    <CardContent className="p-2 text-center text-xs text-muted-foreground">
+                                    <CardContent className="p-2 text-center text-sm text-muted-foreground">
                                         {img.description}
                                     </CardContent>
                                 </Card>
