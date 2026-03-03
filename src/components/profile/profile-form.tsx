@@ -274,6 +274,10 @@ export function ProfileForm() {
                                     }}
                                     disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
                                     initialFocus
+                                    weekStartsOn={1}
+                                    formatters={{
+                                        formatWeekdayName: (day) => format(day, "EE"),
+                                    }}
                                 />
                                 <div className="flex items-center gap-2 border-t p-3">
                                     <Input
