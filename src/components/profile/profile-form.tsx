@@ -36,6 +36,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { AlertDialog, AlertDialogContent } from "@/components/ui/alert-dialog";
 import { Textarea } from "../ui/textarea";
+import { Label } from "@/components/ui/label";
 
 const formSchema = z.object({
   fullName: z.string().min(1, "Full name is required."),
@@ -218,7 +219,7 @@ export function ProfileForm() {
                 )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <FormField
                     control={form.control}
                     name="contactNumber"
@@ -250,7 +251,7 @@ export function ProfileForm() {
                                 <Button
                                 variant={"outline"}
                                 className={cn(
-                                    "w-[280px] pl-3 text-left font-normal",
+                                    "w-full justify-start pl-3 text-left font-normal",
                                     !field.value && "text-muted-foreground"
                                 )}
                                 >
@@ -279,11 +280,9 @@ export function ProfileForm() {
                         </FormItem>
                     )}
                 />
-                 <div className="w-24">
-                    <FormLabel>Age</FormLabel>
-                    <FormControl>
-                        <Input value={age === null ? '' : age} readOnly className="bg-muted font-bold" />
-                    </FormControl>
+                 <div>
+                    <Label>Age</Label>
+                    <Input value={age === null ? '' : age} readOnly className="bg-muted font-bold" />
                 </div>
             </div>
 
