@@ -113,7 +113,7 @@ export function Events() {
                 const days = [...emptyDays, ...monthDays];
 
                 return (
-                  <div key={month} className="bg-card border rounded-lg p-3 shadow-sm transition-transform duration-300 ease-in-out hover:scale-125 hover:shadow-2xl relative hover:z-10">
+                  <div key={month} className="bg-card border rounded-lg p-3 shadow-sm transition-transform duration-300 ease-in-out hover:scale-[1.2] hover:shadow-2xl relative hover:z-20">
                     <div className="bg-accent text-accent-foreground text-center font-semibold py-1 mb-2 rounded">
                       {month}
                     </div>
@@ -151,7 +151,7 @@ export function Events() {
           </div>
 
           {/* Events List */}
-          <div className="pt-12 flex flex-col justify-between">
+          <div className="h-full flex flex-col justify-between">
              <div>
               <h2 className="text-4xl text-primary mb-4 font-headline">May {year}</h2>
               <ul className="space-y-2 list-disc list-inside text-muted-foreground">
