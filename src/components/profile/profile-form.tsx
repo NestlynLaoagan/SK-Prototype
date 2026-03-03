@@ -261,19 +261,29 @@ export function ProfileForm() {
                             </FormControl>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                                mode="single"
-                                captionLayout="dropdown"
-                                fromYear={1930}
-                                toYear={new Date().getFullYear()}
-                                selected={field.value}
-                                onSelect={(date) => {
-                                  if (date) field.onChange(date);
-                                  setIsCalendarOpen(false);
-                                }}
-                                disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                                initialFocus
-                            />
+                                <Calendar
+                                    mode="single"
+                                    captionLayout="dropdown"
+                                    fromYear={1930}
+                                    toYear={new Date().getFullYear()}
+                                    selected={field.value}
+                                    onSelect={(date) => {
+                                      if (date) {
+                                        field.onChange(date);
+                                      }
+                                    }}
+                                    disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                                    initialFocus
+                                />
+                                <div className="flex items-center gap-2 border-t p-3">
+                                    <Input
+                                        readOnly
+                                        value={field.value ? format(field.value, "dd / MM / yyyy") : ""}
+                                        placeholder="dd / mm / yyyy"
+                                        className="text-center bg-background"
+                                    />
+                                    <Button type="button" onClick={() => setIsCalendarOpen(false)}>Set Date</Button>
+                                </div>
                             </PopoverContent>
                         </Popover>
                         <FormMessage />
