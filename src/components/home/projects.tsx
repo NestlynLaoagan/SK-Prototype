@@ -19,7 +19,7 @@ export function Projects() {
   const [selectedIndex, setSelectedIndex] = React.useState(0)
 
   const plugin = React.useRef(
-    Autoplay({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true })
+    Autoplay({ delay: 3000, stopOnInteraction: true, stopOnMouseEnter: true })
   )
 
   React.useEffect(() => {
@@ -36,7 +36,8 @@ export function Projects() {
     mainApi.on('reInit', onSelect)
 
     const onAutoplayPlay = () => {
-      // No need to do anything here for now
+        // This function is called when autoplay starts.
+        // We can re-apply the stop on mouse enter logic here if needed.
     }
     mainApi.on('autoplay:play' as any, onAutoplayPlay)
 
@@ -90,7 +91,7 @@ export function Projects() {
                 </Carousel>
 
                 <Carousel setApi={setThumbApi} className="w-full mt-4">
-                    <CarouselContent className="h-24">
+                    <CarouselContent className="h-36">
                     {PlaceHolderImages.map((img, index) => (
                         <CarouselItem key={index} className="pt-1 basis-1/2 md:basis-1/3 lg:basis-1/5 h-full">
                             <div className="p-1 h-full">
@@ -102,7 +103,7 @@ export function Projects() {
                                         plugin.current.reset(); // Reset autoplay timer on manual navigation
                                     }}
                                 >
-                                    <CardContent className="flex-grow flex items-center justify-center p-2 text-center text-sm text-muted-foreground">
+                                    <CardContent className="flex-grow flex items-center justify-center p-4 text-center text-lg text-muted-foreground">
                                         {img.description}
                                     </CardContent>
                                 </Card>
