@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -32,9 +33,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { PasswordInput } from "../ui/password-input"
+import { useUser } from "@/firebase"
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 
 
 const settingsSchema = z.object({
+  profilePicture: z.any().optional(),
   name: z.string().min(1, "Name is required."),
   email: z.string().email("Invalid email address."),
   phone: z.string().min(10, "Invalid phone number."),
@@ -49,18 +53,29 @@ const settingsSchema = z.object({
 export function SettingsForm() {
     const router = useRouter()
     const { toast } = useToast()
+    const { user } = useUser()
 
     const form = useForm<z.infer<typeof settingsSchema>>({
         resolver: zodResolver(settingsSchema),
         defaultValues: {
-            name: "Current User",
-            email: "user@example.com",
-            phone: "09123456789",
+            name: "",
+            email: "",
+            phone: "",
             twoFactorEnabled: false,
             newPassword: "",
             confirmPassword: "",
         },
     })
+
+    useEffect(() => {
+        if (user) {
+            form.reset({
+                name: user.displayName || "",
+                email: user.email || "",
+                phone: user.phoneNumber || "",
+            })
+        }
+    }, [user, form])
     
     function handleOtp() {
         toast({
@@ -89,6 +104,31 @@ export function SettingsForm() {
                         <div>
                             <h3 className="text-lg font-medium mb-4">Personal Information</h3>
                              <div className="space-y-4">
+                                <FormField
+                                    control={form.control}
+                                    name="profilePicture"
+                                    render={({ field: { onChange, value, ...rest} }) => (
+                                        <FormItem>
+                                            <FormLabel>Profile Picture</FormLabel>
+                                            <div className="flex items-center gap-4">
+                                                <Avatar className="h-20 w-20">
+                                                    <AvatarImage src={user?.photoURL || "https://picsum.photos/seed/avatar/100/100"} alt="User avatar" data-ai-hint="person face" />
+                                                    <AvatarFallback>{user?.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                                                </Avatar>
+                                                <FormControl>
+                                                    <Input 
+                                                        type="file" 
+                                                        accept="image/*"
+                                                        className="max-w-sm"
+                                                        onChange={(e) => onChange(e.target.files)}
+                                                        {...rest}
+                                                    />
+                                                </FormControl>
+                                            </div>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
                                 <FormField
                                     control={form.control}
                                     name="name"
