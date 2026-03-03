@@ -52,22 +52,22 @@ export default function HomePage() {
                             <CardContent className="p-6">
                                 <div className="flex items-start gap-4">
                                     <AnnIcon className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                                    <div className="flex-1">
-                                        <div className="flex flex-wrap items-center gap-2">
+                                    <div className="flex-1 space-y-1">
+                                        <div className="flex items-center gap-2">
                                             <h3 className="font-semibold text-lg">{announcement.title}</h3>
                                             <Badge className={cn(
                                                 "capitalize",
-                                                announcement.status === 'Completed' && 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100/80',
-                                                announcement.status === 'Upcoming' && 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100/80',
-                                                announcement.status === 'Canceled' && 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100/80'
+                                                announcement.status === 'Completed' && 'bg-green-100 text-green-800 border-green-200',
+                                                announcement.status === 'Upcoming' && 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                                                announcement.status === 'Canceled' && 'bg-red-100 text-red-800 border-red-200'
                                             )}>
                                                 {announcement.status}
                                             </Badge>
                                         </div>
                                         <p className="text-sm text-muted-foreground">{format(parseISO(announcement.date), "MMMM d, yyyy")}</p>
+                                        <p className="text-muted-foreground pt-2">{announcement.content}</p>
                                     </div>
                                 </div>
-                                <p className="mt-2 ml-10 text-muted-foreground">{announcement.content}</p>
                             </CardContent>
                         </Card>
                        )

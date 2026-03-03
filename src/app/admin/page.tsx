@@ -131,24 +131,22 @@ export default function AdminDashboardPage() {
                                 <div className="p-4 flex justify-between items-start">
                                     <div className="flex-1 flex items-start gap-4">
                                         <AnnIcon className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                                        <div className="flex-1 space-y-2">
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <p className="font-medium text-foreground">{ann.title}</p>
-                                                    <Badge className={cn(
-                                                        "capitalize text-xs",
-                                                        ann.status === 'Completed' && 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100/80',
-                                                        ann.status === 'Upcoming' && 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100/80',
-                                                        ann.status === 'Canceled' && 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100/80'
-                                                    )}>
-                                                        {ann.status}
-                                                    </Badge>
-                                                </div>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {format(parseISO(ann.date), 'PPP p')}
-                                                </p>
+                                        <div className="flex-1 space-y-1">
+                                            <div className="flex items-center gap-2">
+                                                <p className="font-medium text-foreground">{ann.title}</p>
+                                                <Badge className={cn(
+                                                    "capitalize text-xs",
+                                                    ann.status === 'Completed' && 'bg-green-100 text-green-800 border-green-200',
+                                                    ann.status === 'Upcoming' && 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                                                    ann.status === 'Canceled' && 'bg-red-100 text-red-800 border-red-200'
+                                                )}>
+                                                    {ann.status}
+                                                </Badge>
                                             </div>
-                                            <p className="text-sm text-muted-foreground">{ann.content}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {format(parseISO(ann.date), 'PPP p')}
+                                            </p>
+                                            <p className="text-sm text-muted-foreground pt-2">{ann.content}</p>
                                         </div>
                                     </div>
                                     <div className="flex-shrink-0">
