@@ -7,10 +7,10 @@ import * as z from "zod"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Loader } from "lucide-react"
-import { useUser, useFirebase, setDocumentNonBlocking } from "@/firebase"
+import { useUser, useFirebase } from "@/firebase"
 import { updateProfile } from "firebase/auth"
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage"
-import { doc } from "firebase/firestore"
+import { doc, setDoc } from "firebase/firestore"
 
 
 import { Button } from "@/components/ui/button"
@@ -130,7 +130,7 @@ export function SettingsForm() {
                 fullName: values.name,
                 photoURL: photoURL,
             };
-            setDocumentNonBlocking(userDocRef, updatedProfileData, { merge: true });
+            await setDoc(userDocRef, updatedProfileData, { merge: true });
 
             toast({
                 title: "Settings Saved",
