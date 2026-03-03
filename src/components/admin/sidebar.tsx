@@ -17,6 +17,7 @@ import { useAuth } from "@/firebase"
 import { signOut } from "firebase/auth"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
+import { ThemeToggle } from "../theme-toggle"
 
 export function AdminSidebar() {
     const pathname = usePathname();
@@ -142,6 +143,9 @@ export function AdminSidebar() {
       </SidebarContent>
        <SidebarFooter>
             <SidebarSeparator />
+            <div className="flex justify-center p-2">
+                <ThemeToggle />
+            </div>
             <SidebarMenu>
                 <SidebarMenuItem>
                     <Link href="/admin/settings">

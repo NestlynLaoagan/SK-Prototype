@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Logo } from './logo';
 import { NotificationBell } from './notification-bell';
 import { UserMenu } from './user-menu';
+import { ThemeToggle } from './theme-toggle';
 
 export function AppHeader() {
   return (
@@ -20,6 +21,7 @@ export function AppHeader() {
             </nav>
         </div>
         <div className="ml-auto flex items-center space-x-2">
+          <ThemeToggle />
           <NotificationBell />
           <UserMenu />
         </div>
