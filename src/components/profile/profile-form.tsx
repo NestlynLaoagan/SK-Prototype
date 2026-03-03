@@ -473,11 +473,28 @@ export function ProfileForm() {
                 />
             </div>
             
-             <div className="flex flex-col items-center mt-6">
-                <Button type="submit" size="lg" className="w-full px-20 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-full transition-all shadow-md" disabled={isLoading}>
-                    {isLoading ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : "SUBMIT FORM"}
-                </Button>
-                <p className="text-center mt-4 text-[10px] italic text-muted-foreground uppercase tracking-widest">
+             <div className="flex flex-col items-center mt-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                    <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="lg" 
+                        className="w-full rounded-full shadow-md font-bold" 
+                        onClick={() => router.push('/home')}
+                        disabled={isLoading}
+                    >
+                        CANCEL
+                    </Button>
+                    <Button 
+                        type="submit" 
+                        size="lg" 
+                        className="w-full bg-primary hover:bg-primary/90 text-white font-bold rounded-full transition-all shadow-md" 
+                        disabled={isLoading}
+                    >
+                        {isLoading ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : "SUBMIT FORM"}
+                    </Button>
+                </div>
+                <p className="text-center text-[10px] italic text-muted-foreground uppercase tracking-widest">
                     Rest assured that all information gathered from this will<br />
                     be treated with utmost confidentiality.
                 </p>
