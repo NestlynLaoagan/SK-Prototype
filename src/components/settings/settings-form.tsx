@@ -1,10 +1,16 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { Loader } from "lucide-react"
+import { useUser, useFirebase } from "@/firebase"
+import { updateProfile } from "firebase/auth"
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage"
+
 
 import { Button } from "@/components/ui/button"
 import {
@@ -33,7 +39,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { PasswordInput } from "../ui/password-input"
-import { useUser } from "@/firebase"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 
 
@@ -41,7 +46,7 @@ const settingsSchema = z.object({
   profilePicture: z.any().optional(),
   name: z.string().min(1, "Name is required."),
   email: z.string().email("Invalid email address."),
-  phone: z.string().min(10, "Invalid phone number."),
+  phone: z.string().optional(),
   newPassword: z.string().min(8, "Password must be at least 8 characters.").optional().or(z.literal('')),
   confirmPassword: z.string().optional(),
   twoFactorEnabled: z.boolean().default(false),
@@ -54,6 +59,8 @@ export function SettingsForm() {
     const router = useRouter()
     const { toast } = useToast()
     const { user } = useUser()
+    const { firebaseApp, auth } = useFirebase()
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const form = useForm<z.infer<typeof settingsSchema>>({
         resolver: zodResolver(settingsSchema),
@@ -66,6 +73,9 @@ export function SettingsForm() {
             confirmPassword: "",
         },
     })
+    
+    const { formState } = form;
+    const isLoading = formState.isSubmitting;
 
     useEffect(() => {
         if (user) {
@@ -84,12 +94,48 @@ export function SettingsForm() {
         })
     }
 
-    function onSubmit(values: z.infer<typeof settingsSchema>) {
-        console.log(values)
-        toast({
-            title: "Settings Saved",
-            description: "Your account details have been updated.",
-        })
+    async function onSubmit(values: z.infer<typeof settingsSchema>) {
+        if (!user || !auth.currentUser) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "You need to be logged in to update your profile.",
+            });
+            return;
+        }
+
+        try {
+            let photoURL = auth.currentUser.photoURL;
+
+            // 1. Upload new profile picture if one was selected
+            if (values.profilePicture && values.profilePicture.length > 0) {
+                const file = values.profilePicture[0];
+                const storage = getStorage(firebaseApp);
+                const fileRef = storageRef(storage, `profile-pictures/${user.uid}`);
+                
+                await uploadBytes(fileRef, file);
+                photoURL = await getDownloadURL(fileRef);
+            }
+
+            // 2. Update user profile in Firebase Auth
+            await updateProfile(auth.currentUser, {
+                displayName: values.name,
+                photoURL: photoURL,
+            });
+
+            toast({
+                title: "Settings Saved",
+                description: "Your account details have been updated successfully.",
+            });
+
+        } catch (error: any) {
+            console.error("Settings update failed:", error);
+            toast({
+                variant: "destructive",
+                title: "Update Failed",
+                description: error.message || "An error occurred while saving your settings.",
+            });
+        }
     }
 
     return (
@@ -107,12 +153,12 @@ export function SettingsForm() {
                                 <FormField
                                     control={form.control}
                                     name="profilePicture"
-                                    render={({ field: { onChange, value, ...rest} }) => (
+                                    render={({ field: { onChange, value, ...rest } }) => (
                                         <FormItem>
                                             <FormLabel>Profile Picture</FormLabel>
                                             <div className="flex items-center gap-4">
                                                 <Avatar className="h-20 w-20">
-                                                    <AvatarImage src={user?.photoURL || "https://picsum.photos/seed/avatar/100/100"} alt="User avatar" data-ai-hint="person face" />
+                                                    <AvatarImage src={imagePreview || user?.photoURL || "https://picsum.photos/seed/avatar/100/100"} alt="User avatar" data-ai-hint="person face" />
                                                     <AvatarFallback>{user?.displayName?.charAt(0) || 'U'}</AvatarFallback>
                                                 </Avatar>
                                                 <FormControl>
@@ -120,8 +166,20 @@ export function SettingsForm() {
                                                         type="file" 
                                                         accept="image/*"
                                                         className="max-w-sm"
-                                                        onChange={(e) => onChange(e.target.files)}
                                                         {...rest}
+                                                        onChange={(e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (file) {
+                                                                const reader = new FileReader();
+                                                                reader.onloadend = () => {
+                                                                    setImagePreview(reader.result as string);
+                                                                };
+                                                                reader.readAsDataURL(file);
+                                                            } else {
+                                                                setImagePreview(null);
+                                                            }
+                                                            onChange(e.target.files);
+                                                        }}
                                                     />
                                                 </FormControl>
                                             </div>
@@ -246,7 +304,10 @@ export function SettingsForm() {
                         </div>
 
                         <div className="flex gap-2">
-                            <Button type="submit">Save Changes</Button>
+                            <Button type="submit" disabled={isLoading}>
+                                {isLoading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
+                                Save Changes
+                            </Button>
                             <Button type="button" variant="outline" onClick={() => router.push('/home')}>Cancel</Button>
                         </div>
                     </form>
