@@ -91,7 +91,7 @@ export function Projects() {
                 </Carousel>
 
                 <Carousel setApi={setThumbApi} className="w-full mt-4">
-                    <CarouselContent className="h-28">
+                    <CarouselContent className="h-24">
                     {PlaceHolderImages.map((img, index) => (
                         <CarouselItem key={index} className="pt-1 basis-1/2 md:basis-1/3 lg:basis-1/5 h-full">
                             <div className="p-1 h-full">
@@ -103,7 +103,7 @@ export function Projects() {
                                         plugin.current.reset(); // Reset autoplay timer on manual navigation
                                     }}
                                 >
-                                    <CardContent className="flex-grow flex items-center justify-center p-2 text-center text-xs text-muted-foreground">
+                                    <CardContent className="flex-grow flex items-center justify-center p-2 text-center text-sm text-muted-foreground">
                                         {img.description}
                                     </CardContent>
                                 </Card>
