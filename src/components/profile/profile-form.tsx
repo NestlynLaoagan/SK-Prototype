@@ -263,7 +263,7 @@ export function ProfileForm() {
                             <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
                                 mode="single"
-                                captionLayout="dropdown-buttons"
+                                captionLayout="dropdown"
                                 fromYear={1930}
                                 toYear={new Date().getFullYear()}
                                 selected={field.value}
