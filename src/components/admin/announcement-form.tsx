@@ -32,6 +32,7 @@ const formSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
   content: z.string().min(1, 'Content is required.'),
   status: z.enum(['Upcoming', 'Completed', 'Canceled']),
+  type: z.enum(['general', 'assembly']),
 });
 
 interface AnnouncementFormProps {
@@ -49,6 +50,7 @@ export function AnnouncementForm({ announcement, onClose }: AnnouncementFormProp
       title: announcement?.title || '',
       content: announcement?.content || '',
       status: announcement?.status || 'Upcoming',
+      type: announcement?.type || 'general',
     },
   });
 
@@ -108,6 +110,27 @@ export function AnnouncementForm({ announcement, onClose }: AnnouncementFormProp
               <FormControl>
                 <Textarea placeholder="Enter the announcement details" className="min-h-[120px]" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Type</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="general">General</SelectItem>
+                  <SelectItem value="assembly">Assembly</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

@@ -124,43 +124,56 @@ export default function AdminDashboardPage() {
                     {!isLoadingAnnouncements && announcements && announcements.length === 0 && (
                         <p className="text-muted-foreground text-center py-8">No announcements have been posted yet.</p>
                     )}
-                    {!isLoadingAnnouncements && announcements?.map((ann) => (
-                        <Card key={ann.id} className="bg-background p-4 flex justify-between items-start border">
-                             <div className="flex-1 space-y-1">
-                                <div className="flex items-center gap-2">
-                                    <p className="font-medium text-foreground">{ann.title}</p>
-                                    <Badge className={cn(
-                                        "capitalize",
-                                        ann.status === 'Completed' && 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100/80',
-                                        ann.status === 'Upcoming' && 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100/80',
-                                        ann.status === 'Canceled' && 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100/80'
-                                    )}>
-                                        {ann.status}
-                                    </Badge>
+                    {!isLoadingAnnouncements && announcements?.map((ann) => {
+                        const AnnIcon = ann.type === 'assembly' ? Users : Megaphone;
+                        return (
+                            <Card key={ann.id} className="bg-background border">
+                                <div className="p-4 flex justify-between items-start">
+                                    <div className="flex-1 flex items-start gap-4">
+                                        <AnnIcon className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                                        <div className="flex-1 space-y-2">
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <p className="font-medium text-foreground">{ann.title}</p>
+                                                    <Badge className={cn(
+                                                        "capitalize text-xs",
+                                                        ann.status === 'Completed' && 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100/80',
+                                                        ann.status === 'Upcoming' && 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100/80',
+                                                        ann.status === 'Canceled' && 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100/80'
+                                                    )}>
+                                                        {ann.status}
+                                                    </Badge>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {format(parseISO(ann.date), 'PPP p')}
+                                                </p>
+                                            </div>
+                                            <p className="text-sm text-muted-foreground">{ann.content}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex-shrink-0">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => handleEditClick(ann)}>
+                                                    <Edit className="mr-2 h-4 w-4" />
+                                                    Edit
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => setAnnouncementToDelete(ann)} className="text-destructive">
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Delete
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
                                 </div>
-                                <p className="text-sm text-muted-foreground">
-                                    Posted on {format(parseISO(ann.date), 'PPP p')}
-                                </p>
-                            </div>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEditClick(ann)}>
-                                        <Edit className="mr-2 h-4 w-4" />
-                                        Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setAnnouncementToDelete(ann)} className="text-destructive">
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Delete
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </Card>
-                    ))}
+                            </Card>
+                        )
+                    })}
                 </CardContent>
             </Card>
 

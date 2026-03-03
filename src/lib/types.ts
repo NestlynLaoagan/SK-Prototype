@@ -26,6 +26,7 @@ export type Announcement = {
     content: string;
     date: string; // ISO 8601 date string
     status: 'Upcoming' | 'Completed' | 'Canceled';
+    type?: 'general' | 'assembly';
 };
     
 export type Faq = {

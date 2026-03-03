@@ -7,7 +7,7 @@ import { Feedback } from "@/components/home/feedback";
 import { Hero } from "@/components/home/hero";
 import { Projects } from "@/components/home/projects";
 import { IskaiChatbot } from "@/components/iskai-chatbot";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Megaphone, Users, Loader } from "lucide-react";
 import { CurrentYear } from "@/components/current-year";
 import { MemberAuthGuard } from "@/components/auth/member-auth-guard";
@@ -45,32 +45,33 @@ export default function HomePage() {
 
                 <div className="w-full max-w-4xl grid gap-6">
                     {isLoading && <div className="flex justify-center p-8"><Loader className="h-8 w-8 animate-spin" /></div>}
-                    {!isLoading && announcements?.map((announcement) => (
+                    {!isLoading && announcements?.map((announcement) => {
+                       const AnnIcon = announcement.type === 'assembly' ? Users : Megaphone;
+                       return (
                         <Card key={announcement.id}>
-                            <CardHeader className="flex flex-row items-start gap-4 space-y-0">
-                                <div className="mt-1">
-                                    <Megaphone className="h-6 w-6 text-primary" />
+                            <CardContent className="p-6">
+                                <div className="flex items-start gap-4">
+                                    <AnnIcon className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                                    <div className="flex-1">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <h3 className="font-semibold text-lg">{announcement.title}</h3>
+                                            <Badge className={cn(
+                                                "capitalize",
+                                                announcement.status === 'Completed' && 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100/80',
+                                                announcement.status === 'Upcoming' && 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100/80',
+                                                announcement.status === 'Canceled' && 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100/80'
+                                            )}>
+                                                {announcement.status}
+                                            </Badge>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground">{format(parseISO(announcement.date), "MMMM d, yyyy")}</p>
+                                    </div>
                                 </div>
-                                <div className="flex-1 space-y-1">
-                                  <div className="flex items-center gap-2">
-                                      <CardTitle>{announcement.title}</CardTitle>
-                                      <Badge className={cn(
-                                          "capitalize",
-                                          announcement.status === 'Completed' && 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100/80',
-                                          announcement.status === 'Upcoming' && 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100/80',
-                                          announcement.status === 'Canceled' && 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100/80'
-                                      )}>
-                                          {announcement.status}
-                                      </Badge>
-                                  </div>
-                                  <CardDescription>{format(parseISO(announcement.date), "PPP")}</CardDescription>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-muted-foreground">{announcement.content}</p>
+                                <p className="mt-2 ml-10 text-muted-foreground">{announcement.content}</p>
                             </CardContent>
                         </Card>
-                    ))}
+                       )
+                    })}
                      {!isLoading && announcements?.length === 0 && (
                         <p className="text-center text-muted-foreground py-8">No announcements to display.</p>
                      )}
