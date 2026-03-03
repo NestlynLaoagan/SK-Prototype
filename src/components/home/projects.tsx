@@ -33,10 +33,23 @@ export function Projects() {
     }
 
     mainApi.on("select", onSelect)
-    onSelect()
+    mainApi.on('reInit', onSelect) // Re-run on re-initialization
+
+    // When the autoplay plugin starts playing, it should not be considered an interaction
+    const onAutoplay = () => {
+      if (plugin.current.options.stopOnInteraction) {
+        // No need to do anything here, just letting it play
+      }
+    }
+    mainApi.on('autoplay:play' as any, onAutoplay)
+
+
+    onSelect() // Set initial state
     
     return () => {
         mainApi.off("select", onSelect)
+        mainApi.off('reInit', onSelect)
+        mainApi.off('autoplay:play' as any, onAutoplay)
     }
   }, [mainApi, thumbApi])
 
@@ -57,7 +70,9 @@ export function Projects() {
                     plugins={[plugin.current]}
                     className="w-full"
                     onMouseEnter={plugin.current.stop}
-                    onMouseLeave={() => plugin.current.play(true)}
+                    onMouseLeave={() => {
+                        plugin.current.play()
+                    }}
                 >
                     <CarouselContent>
                     {PlaceHolderImages.map((img, index) => (
@@ -79,7 +94,7 @@ export function Projects() {
                 </Carousel>
 
                 <Carousel setApi={setThumbApi} className="w-full mt-4">
-                    <CarouselContent className="h-20">
+                    <CarouselContent className="h-24">
                     {PlaceHolderImages.map((img, index) => (
                         <CarouselItem key={index} className="pt-1 basis-1/2 md:basis-1/3 lg:basis-1/5 h-full">
                             <div className="p-1 h-full">
@@ -91,7 +106,7 @@ export function Projects() {
                                         plugin.current.reset();
                                     }}
                                 >
-                                    <CardContent className="p-2 text-center text-sm text-muted-foreground">
+                                    <CardContent className="p-4 text-center text-base text-muted-foreground">
                                         {img.description}
                                     </CardContent>
                                 </Card>
