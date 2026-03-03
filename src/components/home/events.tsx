@@ -113,7 +113,7 @@ export function Events() {
                 const days = [...emptyDays, ...monthDays];
 
                 return (
-                  <div key={month} className="bg-card border rounded-lg p-3 shadow-sm transition-transform duration-200 ease-in-out hover:scale-105 hover:shadow-xl">
+                  <div key={month} className="bg-card border rounded-lg p-3 shadow-sm transition-transform duration-300 ease-in-out hover:scale-125 hover:shadow-2xl relative hover:z-10">
                     <div className="bg-accent text-accent-foreground text-center font-semibold py-1 mb-2 rounded">
                       {month}
                     </div>
