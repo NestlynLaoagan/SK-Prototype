@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusCircle, MoreHorizontal, Trash2, Edit } from "lucide-react";
+import { PlusCircle, MoreHorizontal, Trash2, Edit, Loader } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,29 +29,25 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { EventForm } from "@/components/admin/event-form";
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
+import { useFirebase, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { collection, doc, query, orderBy } from "firebase/firestore";
+import type { Event } from "@/lib/types";
 
-export type Event = {
-    id: number;
-    name: string;
-    start: string;
-    end: string;
-    status: string;
-};
-
-const initialEvents: Event[] = [
-    { id: 1, name: "Barangay Assembly Day", start: "2024-10-28T09:00", end: "2024-10-28T12:00", status: "Upcoming" },
-    { id: 2, name: "Community Garden Project Launch", start: "2024-11-05T08:00", end: "2024-11-05T11:00", status: "Upcoming" },
-    { id: 3, name: "Free Anti-Rabies Vaccination", start: "2024-11-15T09:00", end: "2024-11-15T16:00", status: "Upcoming" },
-];
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<Event[]>(initialEvents);
+  const { firestore } = useFirebase();
   const { toast } = useToast();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<Event | undefined>(undefined);
   const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
+
+  const eventsCollectionRef = useMemoFirebase(
+    () => firestore ? query(collection(firestore, 'events'), orderBy('start', 'desc')) : null,
+    [firestore]
+  );
+  const { data: events, isLoading } = useCollection<Event>(eventsCollectionRef);
 
   const handleAddEvent = () => {
     setEventToEdit(undefined);
@@ -63,26 +59,28 @@ export default function EventsPage() {
     setIsFormOpen(true);
   };
 
-  const handleSaveEvent = (savedEventData: Omit<Event, 'id'> & { id?: number }) => {
-    if (savedEventData.id) {
-        // Editing existing event
-        setEvents(events.map(e => e.id === savedEventData.id ? { ...e, ...savedEventData, id: e.id } : e));
-    } else {
-        // Adding new event
-        const newEvent: Event = {
-            ...(savedEventData as Omit<Event, 'id'>),
-            id: events.length > 0 ? Math.max(...events.map(e => e.id)) + 1 : 1,
-        };
-        setEvents([...events, newEvent]);
-    }
+  const handleSaveEvent = (savedEventData: Omit<Event, 'id'>) => {
+    if (!firestore) return;
+
+    const docRef = eventToEdit 
+        ? doc(firestore, 'events', eventToEdit.id)
+        : doc(collection(firestore, 'events'));
+
+    const dataToSave = {
+        ...savedEventData,
+        id: docRef.id,
+    };
+    
+    setDocumentNonBlocking(docRef, dataToSave, { merge: true });
   };
 
   const handleDeleteConfirm = () => {
-    if (!eventToDelete) return;
-    setEvents(events.filter(event => event.id !== eventToDelete.id));
+    if (!eventToDelete || !firestore) return;
+    const docRef = doc(firestore, 'events', eventToDelete.id);
+    deleteDocumentNonBlocking(docRef);
     toast({
       title: "Event deleted",
-      description: `The event "${eventToDelete.name}" has been successfully deleted.`,
+      description: `The event "${eventToDelete.title}" has been successfully deleted.`,
       variant: "destructive",
     });
     setEventToDelete(null);
@@ -91,7 +89,7 @@ export default function EventsPage() {
   const formatDateTime = (dateTimeString: string) => {
     if (!dateTimeString) return 'N/A';
     try {
-        return format(new Date(dateTimeString), "MMM d, yyyy h:mm a");
+        return format(parseISO(dateTimeString), "MMM d, yyyy h:mm a");
     } catch (e) {
         return 'Invalid Date';
     }
@@ -107,7 +105,7 @@ export default function EventsPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
             <div>
-                <CardTitle>Upcoming Events</CardTitle>
+                <CardTitle>Community Events</CardTitle>
                 <CardDescription>Schedule and manage upcoming barangay events.</CardDescription>
             </div>
             <Button onClick={handleAddEvent}>
@@ -127,9 +125,18 @@ export default function EventsPage() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {events.map(event => (
+                    {isLoading && (
+                        <TableRow>
+                            <TableCell colSpan={5} className="text-center">
+                                <div className="flex justify-center p-8">
+                                    <Loader className="h-6 w-6 animate-spin" />
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    )}
+                    {events?.map(event => (
                         <TableRow key={event.id}>
-                            <TableCell className="font-medium">{event.name}</TableCell>
+                            <TableCell className="font-medium">{event.title}</TableCell>
                             <TableCell className="text-xs">{formatDateTime(event.start)}</TableCell>
                             <TableCell className="text-xs">{formatDateTime(event.end)}</TableCell>
                             <TableCell>{event.status}</TableCell>
@@ -180,7 +187,7 @@ export default function EventsPage() {
               <AlertDialogHeader>
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete the event titled &quot;{eventToDelete?.name}&quot;.
+                      This action cannot be undone. This will permanently delete the event titled &quot;{eventToDelete?.title}&quot;.
                   </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

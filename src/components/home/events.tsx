@@ -1,10 +1,26 @@
 "use client";
 
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ChevronLeft, ChevronRight, Loader } from 'lucide-react';
+import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy } from 'firebase/firestore';
+import type { Event as EventType } from '@/lib/types';
+import { format, parseISO, getMonth, getDate, getYear } from 'date-fns';
+
+type EventDate = {
+    month: number;
+    day: number;
+}
 
 export function Events() {
   const [currentCalendarView, setCurrentCalendarView] = useState(0); // 0 = Jan-Jun, 1 = Jul-Dec
+
+  const { firestore } = useFirebase();
+  const eventsCollectionRef = useMemoFirebase(
+    () => firestore ? query(collection(firestore, 'events'), orderBy('start', 'asc')) : null,
+    [firestore]
+  );
+  const { data: events, isLoading } = useCollection<EventType>(eventsCollectionRef);
 
   const allMonths = [
     'JANUARY', 'FEBRUARY', 'MARCH',
@@ -18,28 +34,19 @@ export function Events() {
 
   const displayMonths = currentCalendarView === 0 ? firstHalfMonths : secondHalfMonths;
 
-  const year = 2026;
+  const currentYear = new Date().getFullYear();
 
-  // Event dates for highlighting (example: {month: 0-11, day: 1-31})
-  const eventDates = [
-    { month: 4, day: 20 }, // May 20, Regalo Eskwela
-    { month: 5, day: 5 },  // Jun 5, Tree Planting
-    { month: 6, day: 15 }, // Jul 15, First Aid Workshop
-    { month: 7, day: 12 }, // Aug 12, Youth Got Talent
-    { month: 8, day: 1 },  // Sep 1, Liga
-    { month: 8, day: 2 },  // Sep 2, Liga
-    { month: 8, day: 3 },  // Sep 3, Liga
-    { month: 8, day: 4 },  // Sep 4, Liga
-    { month: 8, day: 5 },  // Sep 5, Liga
-    { month: 10, day: 18 }, // Nov 18
-    { month: 10, day: 19 }, // Nov 19
-    { month: 10, day: 20 }, // Nov 20
-    { month: 10, day: 25 }, // Nov 25
-    { month: 11, day: 15 }, // Dec 15
-    { month: 11, day: 23 }, // Dec 23
-    { month: 11, day: 28 }, // Dec 28
-    { month: 11, day: 30 }  // Dec 30
-  ];
+  const eventDates = useMemo(() => {
+    if (!events) return [];
+    return events.map(event => {
+        const startDate = parseISO(event.start);
+        if(getYear(startDate) !== currentYear) return null;
+        return {
+            month: getMonth(startDate),
+            day: getDate(startDate)
+        }
+    }).filter((d): d is EventDate => d !== null);
+  }, [events, currentYear]);
 
   const hasEvent = (monthIndex: number, day: number) => {
     return eventDates.some(event => event.month === monthIndex && event.day === day);
@@ -52,6 +59,18 @@ export function Events() {
   const getFirstDayOfMonth = (year: number, monthIndex: number) => {
       return new Date(year, monthIndex, 1).getDay();
   };
+
+  const eventsByMonth = useMemo(() => {
+    if (!events) return {};
+    return events.reduce((acc, event) => {
+        const monthName = format(parseISO(event.start), 'MMMM');
+        if (!acc[monthName]) {
+            acc[monthName] = [];
+        }
+        acc[monthName].push(event);
+        return acc;
+    }, {} as Record<string, EventType[]>);
+  }, [events]);
 
   return (
     <section id="events" className="w-full py-16 md:py-24 lg:py-32 bg-secondary/50">
@@ -75,7 +94,7 @@ export function Events() {
                 <ChevronLeft className="w-6 h-6" />
               </button>
               <h3 className="text-xl font-medium">
-                {currentCalendarView === 0 ? `January - June ${year}` : `July - December ${year}`}
+                {currentCalendarView === 0 ? `January - June ${currentYear}` : `July - December ${currentYear}`}
               </h3>
               <button
                 onClick={() => setCurrentCalendarView(1)}
@@ -85,12 +104,15 @@ export function Events() {
                 <ChevronRight className="w-6 h-6" />
               </button>
             </div>
+            
+            {isLoading && <div className="flex justify-center items-center h-96"><Loader className="w-8 h-8 animate-spin" /></div>}
 
+            {!isLoading && 
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
               {displayMonths.map((month, index) => {
                 const actualMonthIndex = currentCalendarView === 0 ? index : index + 6;
-                const daysInMonth = getDaysInMonth(year, actualMonthIndex);
-                const firstDay = getFirstDayOfMonth(year, actualMonthIndex);
+                const daysInMonth = getDaysInMonth(currentYear, actualMonthIndex);
+                const firstDay = getFirstDayOfMonth(currentYear, actualMonthIndex);
 
                 const emptyDays = Array.from({ length: firstDay }, (_, i) => <div key={`empty-${i}`}></div>);
                 
@@ -133,7 +155,7 @@ export function Events() {
                 );
               })}
             </div>
-
+            }
             <div className="flex justify-center gap-2 mt-6">
               <button
                 onClick={() => setCurrentCalendarView(0)}
@@ -151,76 +173,21 @@ export function Events() {
           </div>
 
           {/* Events List */}
-          <div className="h-full flex flex-col justify-between">
-             <div>
-              <h2 className="text-4xl text-primary mb-4 font-headline">May {year}</h2>
-              <ul className="space-y-2 list-disc list-inside text-muted-foreground">
-                <li>
-                  <span className="font-bold text-foreground">May 20, {year}</span> - Regalo Eskwela
-                </li>
-              </ul>
-            </div>
-             <div>
-              <h2 className="text-4xl text-primary mb-4 font-headline">June {year}</h2>
-              <ul className="space-y-2 list-disc list-inside text-muted-foreground">
-                <li>
-                  <span className="font-bold text-foreground">June 5, {year}</span> - Tree Planting
-                </li>
-              </ul>
-            </div>
-             <div>
-              <h2 className="text-4xl text-primary mb-4 font-headline">July {year}</h2>
-              <ul className="space-y-2 list-disc list-inside text-muted-foreground">
-                <li>
-                  <span className="font-bold text-foreground">July 15, {year}</span> - First Aid Workshop
-                </li>
-              </ul>
-            </div>
-             <div>
-              <h2 className="text-4xl text-primary mb-4 font-headline">August {year}</h2>
-              <ul className="space-y-2 list-disc list-inside text-muted-foreground">
-                <li>
-                  <span className="font-bold text-foreground">August 12, {year}</span> - Youth Got Talent
-                </li>
-              </ul>
-            </div>
-             <div>
-              <h2 className="text-4xl text-primary mb-4 font-headline">September {year}</h2>
-              <ul className="space-y-2 list-disc list-inside text-muted-foreground">
-                <li>
-                  <span className="font-bold text-foreground">September 1-5, {year}</span> - Liga (Sportsfest)
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h2 className="text-4xl text-primary mb-4 font-headline">November {year}</h2>
-              <ul className="space-y-2 list-disc list-inside text-muted-foreground">
-                <li>
-                  <span className="font-bold text-foreground">November 18-20, {year}</span> - November Market Fever
-                </li>
-                <li>
-                  <span className="font-bold text-foreground">November 25, {year}</span> - Community Meeting
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h2 className="text-4xl text-primary mb-4 font-headline">December {year}</h2>
-              <ul className="space-y-2 list-disc list-inside text-muted-foreground">
-                <li>
-                  <span className="font-bold text-foreground">December 15, {year}</span> - Parol Making Contest
-                </li>
-                <li>
-                  <span className="font-bold text-foreground">December 23, {year}</span> - Distribution of Gifts among Children
-                </li>
-                <li>
-                  <span className="font-bold text-foreground">December 28, {year}</span> - Mrs. and Mr. Rivera Wedding Venue
-                </li>
-                <li>
-                  <span className="font-bold text-foreground">December 30, {year}</span> - Community Party
-                </li>
-              </ul>
-            </div>
+          <div className="h-full flex flex-col justify-start space-y-8">
+            {isLoading && <div className="flex justify-center items-center h-full"><Loader className="w-8 h-8 animate-spin"/></div>}
+            {!isLoading && Object.keys(eventsByMonth).length === 0 && <p className="text-muted-foreground text-center">No events scheduled for this year.</p>}
+            {Object.entries(eventsByMonth).map(([month, monthEvents]) => (
+                 <div key={month}>
+                    <h2 className="text-4xl text-primary mb-4 font-headline">{month} {currentYear}</h2>
+                    <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+                        {monthEvents.map(event => (
+                            <li key={event.id}>
+                                <span className="font-bold text-foreground">{format(parseISO(event.start), 'MMM d, yyyy')}</span> - {event.title}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            ))}
           </div>
         </div>
       </div>

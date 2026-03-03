@@ -178,23 +178,28 @@
           "type": "string",
           "description": "A description of the event."
         },
-        "startDate": {
+        "start": {
           "type": "string",
           "description": "The start date and time of the event.",
           "format": "date-time"
         },
-        "endDate": {
+        "end": {
           "type": "string",
           "description": "The end date and time of the event.",
           "format": "date-time"
+        },
+        "status": {
+            "type": "string",
+            "description": "The status of the event."
         }
       },
       "required": [
         "id",
         "title",
         "description",
-        "startDate",
-        "endDate"
+        "start",
+        "end",
+        "status"
       ]
     },
     "Feedback": {
@@ -254,13 +259,18 @@
           "type": "string",
           "description": "The date of the announcement.",
           "format": "date-time"
+        },
+        "status": {
+            "type": "string",
+            "description": "The status of the announcement."
         }
       },
       "required": [
         "id",
         "title",
         "content",
-        "date"
+        "date",
+        "status"
       ]
     },
      "Faq": {
@@ -313,13 +323,13 @@
         }
       },
       {
-        "path": "/projects/{projectId}/events/{eventId}",
+        "path": "/events/{eventId}",
         "definition": {
-          "entityName": "Event",
-          "schema": {
-            "$ref": "#/backend/entities/Event"
-          },
-          "description": "Stores event details nested within a project."
+            "entityName": "Event",
+            "schema": {
+                "$ref": "#/backend/entities/Event"
+            },
+            "description": "Stores event details."
         }
       },
       {

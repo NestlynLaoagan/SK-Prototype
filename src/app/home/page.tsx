@@ -8,40 +8,26 @@ import { Hero } from "@/components/home/hero";
 import { Projects } from "@/components/home/projects";
 import { IskaiChatbot } from "@/components/iskai-chatbot";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Megaphone, Users } from "lucide-react";
+import { Megaphone, Users, Loader } from "lucide-react";
 import { CurrentYear } from "@/components/current-year";
 import { MemberAuthGuard } from "@/components/auth/member-auth-guard";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useFirebase, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy, limit } from "firebase/firestore";
+import { format, parseISO } from "date-fns";
+import type { Announcement } from "@/lib/types";
 
-const announcements = [
-  {
-    id: 1,
-    title: "Barangay Assembly Day",
-    date: "October 28, 2024",
-    status: "Completed",
-    content: "Join us for the semi-annual Barangay Assembly Day to discuss important community matters, project updates, and financial reports. Your participation is crucial for our barangay's progress.",
-    icon: Users,
-  },
-  {
-    id: 2,
-    title: "Community Garden Project Launch",
-    date: "November 5, 2024",
-    status: "Upcoming",
-    content: "We are excited to launch the new Community Garden project. Volunteers are needed for the initial setup. Let's grow together!",
-    icon: Megaphone,
-  },
-  {
-    id: 3,
-    title: "Free Anti-Rabies Vaccination for Pets",
-    date: "November 15, 2024",
-    status: "Canceled",
-    content: "Protect your furry friends! We will be conducting a free anti-rabies vaccination drive at the barangay hall. Open to all residents.",
-    icon: Megaphone,
-  },
-];
 
 export default function HomePage() {
+  const { firestore } = useFirebase();
+  const announcementsCollectionRef = useMemoFirebase(
+    () => firestore ? query(collection(firestore, 'announcements'), orderBy('date', 'desc'), limit(5)) : null,
+    [firestore]
+  );
+  const { data: announcements, isLoading } = useCollection<Announcement>(announcementsCollectionRef);
+
+
   return (
     <MemberAuthGuard>
         <div className="flex flex-col min-h-screen">
@@ -58,11 +44,12 @@ export default function HomePage() {
                 </div>
 
                 <div className="w-full max-w-4xl grid gap-6">
-                    {announcements.map((announcement) => (
+                    {isLoading && <div className="flex justify-center p-8"><Loader className="h-8 w-8 animate-spin" /></div>}
+                    {!isLoading && announcements?.map((announcement) => (
                         <Card key={announcement.id}>
                             <CardHeader className="flex flex-row items-start gap-4 space-y-0">
                                 <div className="mt-1">
-                                    <announcement.icon className="h-6 w-6 text-primary" />
+                                    <Megaphone className="h-6 w-6 text-primary" />
                                 </div>
                                 <div className="flex-1 space-y-1">
                                   <div className="flex items-center gap-2">
@@ -76,7 +63,7 @@ export default function HomePage() {
                                           {announcement.status}
                                       </Badge>
                                   </div>
-                                  <CardDescription>{announcement.date}</CardDescription>
+                                  <CardDescription>{format(parseISO(announcement.date), "PPP")}</CardDescription>
                                 </div>
                             </CardHeader>
                             <CardContent>
@@ -84,6 +71,9 @@ export default function HomePage() {
                             </CardContent>
                         </Card>
                     ))}
+                     {!isLoading && announcements?.length === 0 && (
+                        <p className="text-center text-muted-foreground py-8">No announcements to display.</p>
+                     )}
                 </div>
             </div>
             </section>

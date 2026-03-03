@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ClipboardCheck, Calendar, Users, Megaphone, PlusCircle, MoreHorizontal, Edit, Trash2, Loader } from "lucide-react";
@@ -25,14 +26,13 @@ import { AnnouncementForm } from "@/components/admin/announcement-form";
 import { useFirebase, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, doc, query, orderBy } from "firebase/firestore";
 import { format, parseISO } from 'date-fns';
-import type { Announcement } from "@/lib/types";
+import type { Announcement, Event as EventType, User as UserType } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminDashboardPage() {
     const { firestore } = useFirebase();
     const { toast } = useToast();
 
-    // State to manage dialog and selected announcement
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [announcementToEdit, setAnnouncementToEdit] = useState<Announcement | undefined>(undefined);
     const [announcementToDelete, setAnnouncementToDelete] = useState<Announcement | null>(null);
@@ -41,14 +41,29 @@ export default function AdminDashboardPage() {
         () => firestore ? query(collection(firestore, 'announcements'), orderBy('date', 'desc')) : null,
         [firestore]
     );
+    const eventsCollectionRef = useMemoFirebase(
+        () => firestore ? collection(firestore, 'events') : null,
+        [firestore]
+    );
+    const usersCollectionRef = useMemoFirebase(
+        () => firestore ? collection(firestore, 'users') : null,
+        [firestore]
+    );
 
-    const { data: announcements, isLoading } = useCollection<Announcement>(announcementsCollectionRef);
+    const { data: announcements, isLoading: isLoadingAnnouncements } = useCollection<Announcement>(announcementsCollectionRef);
+    const { data: events, isLoading: isLoadingEvents } = useCollection<EventType>(eventsCollectionRef);
+    const { data: users, isLoading: isLoadingUsers } = useCollection<UserType>(usersCollectionRef);
+
+    const upcomingEventsCount = useMemo(() => {
+        if (!events) return 0;
+        return events.filter(event => event.status === 'Upcoming' || event.status === 'Ongoing').length;
+    }, [events]);
 
     const stats = [
-        { title: "Upcoming Events", value: "12", icon: Calendar },
+        { title: "Upcoming Events", value: isLoadingEvents ? <Loader className="h-5 w-5 animate-spin" /> : upcomingEventsCount, icon: Calendar },
         { title: "Finished Projects", value: "45", icon: ClipboardCheck },
-        { title: "Community Members", value: "1,234", icon: Users },
-        { title: "Announcements", value: announcements?.length ?? 0, icon: Megaphone },
+        { title: "Community Members", value: isLoadingUsers ? <Loader className="h-5 w-5 animate-spin" /> : users?.length ?? 0, icon: Users },
+        { title: "Announcements", value: isLoadingAnnouncements ? <Loader className="h-5 w-5 animate-spin" /> : announcements?.length ?? 0, icon: Megaphone },
     ];
     
     const handleAddClick = () => {
@@ -103,11 +118,11 @@ export default function AdminDashboardPage() {
                     </Button>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {isLoading && <div className="flex justify-center py-8"><Loader className="h-8 w-8 animate-spin" /></div>}
-                    {!isLoading && announcements && announcements.length === 0 && (
+                    {isLoadingAnnouncements && <div className="flex justify-center py-8"><Loader className="h-8 w-8 animate-spin" /></div>}
+                    {!isLoadingAnnouncements && announcements && announcements.length === 0 && (
                         <p className="text-muted-foreground text-center py-8">No announcements have been posted yet.</p>
                     )}
-                    {!isLoading && announcements?.map((ann) => (
+                    {!isLoadingAnnouncements && announcements?.map((ann) => (
                         <Card key={ann.id} className="bg-background p-4 flex justify-between items-center border">
                             <div>
                                 <p className="font-medium text-foreground">{ann.title}</p>

@@ -59,6 +59,11 @@ service cloud.firestore {
       allow get, list: if true;
       allow create, update, delete: if isAdmin();
     }
+    
+    match /events/{eventId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
 
     match /faqs/{faqId} {
         allow get, list: if true;
@@ -68,16 +73,6 @@ service cloud.firestore {
     match /projects/{projectId} {
       allow get, list: if true;
       allow create, update, delete: if isAdmin();
-
-      /**
-       * @description Events are nested under projects.
-       * @allow (get, list) Publicly readable.
-       * @allow (write) Admins only.
-       */
-      match /events/{eventId} {
-        allow get, list: if true;
-        allow create, update, delete: if isAdmin();
-      }
     }
 
     // ----------------------------------------------------------------------

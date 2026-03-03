@@ -25,10 +25,20 @@ export type Announcement = {
     title: string;
     content: string;
     date: string; // ISO 8601 date string
+    status: 'Upcoming' | 'Completed' | 'Canceled';
 };
     
 export type Faq = {
     id: string;
     question: string;
     answer: string;
+};
+
+export type Event = {
+    id: string;
+    title: string;
+    description: string;
+    start: string; // ISO 8601
+    end: string; // ISO 8601
+    status: 'Planning' | 'Upcoming' | 'Ongoing' | 'Finished';
 };
