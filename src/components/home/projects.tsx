@@ -94,19 +94,19 @@ export function Projects() {
                 </Carousel>
 
                 <Carousel setApi={setThumbApi} className="w-full mt-4">
-                    <CarouselContent className="h-24">
+                    <CarouselContent className="h-32">
                     {PlaceHolderImages.map((img, index) => (
                         <CarouselItem key={index} className="pt-1 basis-1/2 md:basis-1/3 lg:basis-1/5 h-full">
                             <div className="p-1 h-full">
                                 <Card 
-                                    className={`h-full flex items-center justify-center transition-all ${index === selectedIndex ? 'ring-2 ring-primary' : 'opacity-60 hover:opacity-100'}`}
+                                    className={`h-full flex flex-col transition-all ${index === selectedIndex ? 'ring-2 ring-primary' : 'opacity-60 hover:opacity-100'}`}
                                     onClick={() => {
                                         if (!mainApi) return;
                                         mainApi.scrollTo(index);
                                         plugin.current.reset();
                                     }}
                                 >
-                                    <CardContent className="p-4 text-center text-base text-muted-foreground">
+                                    <CardContent className="flex-grow flex items-center justify-center p-4 text-center text-lg text-muted-foreground">
                                         {img.description}
                                     </CardContent>
                                 </Card>
