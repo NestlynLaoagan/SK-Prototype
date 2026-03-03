@@ -80,6 +80,7 @@ export function SignupForm() {
         fullName: values.fullName,
         email: values.email,
         role: 'member',
+        photoURL: user.photoURL,
       });
       
       toast({

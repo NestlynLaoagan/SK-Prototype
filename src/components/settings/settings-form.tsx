@@ -7,9 +7,10 @@ import * as z from "zod"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Loader } from "lucide-react"
-import { useUser, useFirebase } from "@/firebase"
+import { useUser, useFirebase, setDocumentNonBlocking } from "@/firebase"
 import { updateProfile } from "firebase/auth"
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage"
+import { doc } from "firebase/firestore"
 
 
 import { Button } from "@/components/ui/button"
@@ -59,7 +60,7 @@ export function SettingsForm() {
     const router = useRouter()
     const { toast } = useToast()
     const { user } = useUser()
-    const { firebaseApp, auth } = useFirebase()
+    const { firebaseApp, auth, firestore } = useFirebase()
     const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const form = useForm<z.infer<typeof settingsSchema>>({
@@ -95,7 +96,7 @@ export function SettingsForm() {
     }
 
     async function onSubmit(values: z.infer<typeof settingsSchema>) {
-        if (!user || !auth.currentUser) {
+        if (!user || !auth.currentUser || !firestore) {
             toast({
                 variant: "destructive",
                 title: "Error",
@@ -106,6 +107,7 @@ export function SettingsForm() {
 
         try {
             let photoURL = auth.currentUser.photoURL;
+            const userDocRef = doc(firestore, 'users', user.uid);
 
             // 1. Upload new profile picture if one was selected
             if (values.profilePicture && values.profilePicture.length > 0) {
@@ -122,6 +124,13 @@ export function SettingsForm() {
                 displayName: values.name,
                 photoURL: photoURL,
             });
+
+            // 3. Update user profile in Firestore
+            const updatedProfileData = {
+                fullName: values.name,
+                photoURL: photoURL,
+            };
+            setDocumentNonBlocking(userDocRef, updatedProfileData, { merge: true });
 
             toast({
                 title: "Settings Saved",

@@ -3,6 +3,7 @@ export type User = {
     fullName: string;
     email: string;
     role: 'admin' | 'member';
+    photoURL?: string;
     birthdate?: string;
     age?: number;
     gender?: 'male' | 'female';

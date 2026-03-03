@@ -80,6 +80,7 @@ export function AdminLoginForm() {
             fullName: "SK Admin",
             email: ADMIN_EMAIL,
             role: 'admin',
+            photoURL: newUser.photoURL,
           });
 
           toast({
