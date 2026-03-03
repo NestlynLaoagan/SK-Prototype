@@ -127,6 +127,7 @@ export function SettingsForm() {
                 title: "Settings Saved",
                 description: "Your account details have been updated successfully.",
             });
+            router.push('/home');
 
         } catch (error: any) {
             console.error("Settings update failed:", error);
