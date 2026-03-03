@@ -40,7 +40,7 @@ const formSchema = z.object({
   fullName: z.string().min(1, "Full name is required."),
   email: z.string().email("A valid email is required."),
   address: z.string().min(1, "Address is required."),
-  contactNumber: z.string().min(1, "Contact number is required.").regex(/^[0-9]+$/, "Contact number must contain only digits."),
+  contactNumber: z.string().min(1, "Contact number is required.").regex(/^[0-9]+$/, "Contact number must contain only digits.").max(11, "Contact number cannot exceed 11 digits."),
   birthdate: z.date({
     required_error: "A date of birth is required.",
   }),
@@ -226,6 +226,7 @@ export function ProfileForm() {
                         <FormControl>
                             <Input 
                                 placeholder="09123456789" {...field}
+                                maxLength={11}
                                 onChange={(e) => {
                                     const onlyNums = e.target.value.replace(/[^0-9]/g, '');
                                     field.onChange(onlyNums);
