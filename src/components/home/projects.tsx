@@ -19,7 +19,7 @@ export function Projects() {
   const [selectedIndex, setSelectedIndex] = React.useState(0)
 
   const plugin = React.useRef(
-    Autoplay({ delay: 3000, stopOnInteraction: true, stopOnMouseEnter: true })
+    Autoplay({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true })
   )
 
   React.useEffect(() => {
@@ -33,23 +33,19 @@ export function Projects() {
     }
 
     mainApi.on("select", onSelect)
-    mainApi.on('reInit', onSelect) // Re-run on re-initialization
+    mainApi.on('reInit', onSelect)
 
-    // When the autoplay plugin starts playing, it should not be considered an interaction
-    const onAutoplay = () => {
-      if (plugin.current.options.stopOnInteraction) {
-        // No need to do anything here, just letting it play
-      }
+    const onAutoplayPlay = () => {
+      // No need to do anything here for now
     }
-    mainApi.on('autoplay:play' as any, onAutoplay)
-
+    mainApi.on('autoplay:play' as any, onAutoplayPlay)
 
     onSelect() // Set initial state
     
     return () => {
         mainApi.off("select", onSelect)
         mainApi.off('reInit', onSelect)
-        mainApi.off('autoplay:play' as any, onAutoplay)
+        mainApi.off('autoplay:play' as any, onAutoplayPlay)
     }
   }, [mainApi, thumbApi])
 
@@ -94,7 +90,7 @@ export function Projects() {
                 </Carousel>
 
                 <Carousel setApi={setThumbApi} className="w-full mt-4">
-                    <CarouselContent className="h-32">
+                    <CarouselContent className="h-24">
                     {PlaceHolderImages.map((img, index) => (
                         <CarouselItem key={index} className="pt-1 basis-1/2 md:basis-1/3 lg:basis-1/5 h-full">
                             <div className="p-1 h-full">
@@ -103,10 +99,10 @@ export function Projects() {
                                     onClick={() => {
                                         if (!mainApi) return;
                                         mainApi.scrollTo(index);
-                                        plugin.current.reset();
+                                        plugin.current.reset(); // Reset autoplay timer on manual navigation
                                     }}
                                 >
-                                    <CardContent className="flex-grow flex items-center justify-center p-4 text-center text-lg text-muted-foreground">
+                                    <CardContent className="flex-grow flex items-center justify-center p-2 text-center text-sm text-muted-foreground">
                                         {img.description}
                                     </CardContent>
                                 </Card>
