@@ -40,7 +40,7 @@ const formSchema = z.object({
   fullName: z.string().min(1, "Full name is required."),
   email: z.string().email("A valid email is required."),
   address: z.string().min(1, "Address is required."),
-  contactNumber: z.string().min(1, "Contact number is required.").regex(/^(09\d{9}|\+639\d{9})$/, { message: "Please enter a valid Philippine mobile number (e.g., 09123456789 or +639123456789)." }),
+  contactNumber: z.string().startsWith("+639", { message: "Contact number must start with +639."}).length(13, { message: "Please enter a valid 13-digit Philippine mobile number." }),
   birthdate: z.date({
     required_error: "A date of birth is required.",
   }),
@@ -226,7 +226,22 @@ export function ProfileForm() {
                         <FormLabel>Contact No.</FormLabel>
                         <FormControl>
                             <Input 
-                                placeholder="+639123456789" {...field}
+                                placeholder="+639123456789"
+                                {...field}
+                                onChange={(e) => {
+                                    const prefix = "+639";
+                                    let value = e.target.value;
+                                
+                                    if (!value.startsWith(prefix)) {
+                                        value = prefix;
+                                    }
+                                    
+                                    const rest = value.substring(prefix.length).replace(/[^\d]/g, '');
+                                    
+                                    const finalValue = prefix + rest;
+                                    
+                                    field.onChange(finalValue);
+                                }}
                                 maxLength={13}
                              />
                         </FormControl>
