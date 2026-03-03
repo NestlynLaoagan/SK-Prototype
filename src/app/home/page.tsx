@@ -59,7 +59,8 @@ export default function HomePage() {
                                                 "capitalize",
                                                 announcement.status === 'Completed' && 'bg-green-100 text-green-800 border-green-200',
                                                 announcement.status === 'Upcoming' && 'bg-yellow-100 text-yellow-800 border-yellow-200',
-                                                announcement.status === 'Canceled' && 'bg-red-100 text-red-800 border-red-200'
+                                                announcement.status === 'Canceled' && 'bg-red-100 text-red-800 border-red-200',
+                                                announcement.status === 'Ongoing' && 'bg-blue-100 text-blue-800 border-blue-200'
                                             )}>
                                                 {announcement.status}
                                             </Badge>

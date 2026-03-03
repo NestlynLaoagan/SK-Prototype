@@ -25,7 +25,7 @@ export type Announcement = {
     title: string;
     content: string;
     date: string; // ISO 8601 date string
-    status: 'Upcoming' | 'Completed' | 'Canceled';
+    status: 'Upcoming' | 'Completed' | 'Canceled' | 'Ongoing';
     type?: 'general' | 'assembly';
 };
     

@@ -31,7 +31,7 @@ import type { Announcement } from '@/lib/types';
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
   content: z.string().min(1, 'Content is required.'),
-  status: z.enum(['Upcoming', 'Completed', 'Canceled']),
+  status: z.enum(['Upcoming', 'Completed', 'Canceled', 'Ongoing']),
   type: z.enum(['general', 'assembly']),
 });
 
@@ -149,6 +149,7 @@ export function AnnouncementForm({ announcement, onClose }: AnnouncementFormProp
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="Upcoming">Upcoming</SelectItem>
+                  <SelectItem value="Ongoing">Ongoing</SelectItem>
                   <SelectItem value="Completed">Completed</SelectItem>
                   <SelectItem value="Canceled">Canceled</SelectItem>
                 </SelectContent>
