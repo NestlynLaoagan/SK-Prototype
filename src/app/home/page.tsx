@@ -1,3 +1,4 @@
+
 "use client";
 
 import { AppHeader } from "@/components/app-header";
@@ -10,12 +11,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Megaphone, Users } from "lucide-react";
 import { CurrentYear } from "@/components/current-year";
 import { MemberAuthGuard } from "@/components/auth/member-auth-guard";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const announcements = [
   {
     id: 1,
     title: "Barangay Assembly Day",
     date: "October 28, 2024",
+    status: "Completed",
     content: "Join us for the semi-annual Barangay Assembly Day to discuss important community matters, project updates, and financial reports. Your participation is crucial for our barangay's progress.",
     icon: Users,
   },
@@ -23,6 +27,7 @@ const announcements = [
     id: 2,
     title: "Community Garden Project Launch",
     date: "November 5, 2024",
+    status: "Upcoming",
     content: "We are excited to launch the new Community Garden project. Volunteers are needed for the initial setup. Let's grow together!",
     icon: Megaphone,
   },
@@ -30,6 +35,7 @@ const announcements = [
     id: 3,
     title: "Free Anti-Rabies Vaccination for Pets",
     date: "November 15, 2024",
+    status: "Canceled",
     content: "Protect your furry friends! We will be conducting a free anti-rabies vaccination drive at the barangay hall. Open to all residents.",
     icon: Megaphone,
   },
@@ -58,9 +64,19 @@ export default function HomePage() {
                                 <div className="mt-1">
                                     <announcement.icon className="h-6 w-6 text-primary" />
                                 </div>
-                                <div className="flex-1">
-                                    <CardTitle>{announcement.title}</CardTitle>
-                                    <CardDescription>{announcement.date}</CardDescription>
+                                <div className="flex-1 space-y-1">
+                                  <div className="flex items-center gap-2">
+                                      <CardTitle>{announcement.title}</CardTitle>
+                                      <Badge className={cn(
+                                          "capitalize",
+                                          announcement.status === 'Completed' && 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100/80',
+                                          announcement.status === 'Upcoming' && 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100/80',
+                                          announcement.status === 'Canceled' && 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100/80'
+                                      )}>
+                                          {announcement.status}
+                                      </Badge>
+                                  </div>
+                                  <CardDescription>{announcement.date}</CardDescription>
                                 </div>
                             </CardHeader>
                             <CardContent>
