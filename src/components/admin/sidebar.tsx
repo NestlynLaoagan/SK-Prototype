@@ -42,7 +42,7 @@ export function AdminSidebar() {
                 title: "Logged Out",
                 description: "You have been successfully logged out.",
             });
-            router.replace('/admin/login');
+            router.replace('/login');
         } catch (error) {
             console.error("Log out failed:", error);
             toast({
