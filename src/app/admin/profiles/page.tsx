@@ -153,6 +153,8 @@ export default function ProfilesPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Name</TableHead>
+                                    <TableHead>Email</TableHead>
+                                    <TableHead>Contact Number</TableHead>
                                     <TableHead>Age</TableHead>
                                     <TableHead>Gender</TableHead>
                                     <TableHead>Civil Status</TableHead>
@@ -162,7 +164,7 @@ export default function ProfilesPage() {
                             <TableBody>
                                 {isLoading && (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center">
+                                        <TableCell colSpan={7} className="text-center">
                                             <Loader className="mx-auto h-6 w-6 animate-spin" />
                                         </TableCell>
                                     </TableRow>
@@ -170,6 +172,8 @@ export default function ProfilesPage() {
                                 {profiles?.map(profile => (
                                     <TableRow key={profile.id}>
                                         <TableCell className="font-medium">{profile.fullName}</TableCell>
+                                        <TableCell>{profile.email || 'N/A'}</TableCell>
+                                        <TableCell>{profile.contactNumber || 'N/A'}</TableCell>
                                         <TableCell>{profile.age || 'N/A'}</TableCell>
                                         <TableCell>{profile.gender || 'N/A'}</TableCell>
                                         <TableCell>{profile.civilStatus ? profile.civilStatus.charAt(0).toUpperCase() + profile.civilStatus.slice(1) : 'N/A'}</TableCell>
