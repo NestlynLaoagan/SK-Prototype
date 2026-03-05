@@ -35,6 +35,7 @@ import { Calendar } from '../ui/calendar';
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
   content: z.string().min(1, 'Content is required.'),
+  location: z.string().optional(),
   status: z.enum(['Upcoming', 'Completed', 'Canceled', 'Ongoing']),
   type: z.enum(['general', 'assembly']),
   eventDate: z.date({ required_error: 'A date for the event is required.' }),
@@ -54,6 +55,7 @@ export function AnnouncementForm({ announcement, onClose }: AnnouncementFormProp
     defaultValues: {
       title: announcement?.title || '',
       content: announcement?.content || '',
+      location: announcement?.location || '',
       status: announcement?.status || 'Upcoming',
       type: announcement?.type || 'general',
       eventDate: announcement?.eventDate ? new Date(announcement.eventDate) : new Date(),
@@ -116,6 +118,19 @@ export function AnnouncementForm({ announcement, onClose }: AnnouncementFormProp
               <FormLabel>Content</FormLabel>
               <FormControl>
                 <Textarea placeholder="Enter the announcement details" className="min-h-[120px]" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="location"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Location</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., Barangay Hall" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

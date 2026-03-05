@@ -4,7 +4,7 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ClipboardCheck, Calendar, Users, Megaphone, PlusCircle, MoreHorizontal, Edit, Trash2, Loader } from "lucide-react";
+import { ClipboardCheck, Calendar, Users, Megaphone, PlusCircle, MoreHorizontal, Edit, Trash2, Loader, MapPin } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
     AlertDialog,
@@ -144,7 +144,20 @@ export default function AdminDashboardPage() {
                                                     {ann.status}
                                                 </Badge>
                                             </div>
-                                            {ann.eventDate && <p className="text-sm text-muted-foreground">{format(parseISO(ann.eventDate), 'PPP')}</p>}
+                                            <div className="space-y-1 mt-2">
+                                                {ann.eventDate && (
+                                                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                                        <Calendar className="h-4 w-4" />
+                                                        <span>{format(parseISO(ann.eventDate), "PPP 'at' p")}</span>
+                                                    </div>
+                                                )}
+                                                {ann.location && (
+                                                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                                        <MapPin className="h-4 w-4" />
+                                                        <span>{ann.location}</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                             <p className="text-sm text-muted-foreground pt-2">{ann.content}</p>
                                             <p className="text-xs text-muted-foreground text-right mt-2">Posted on {format(parseISO(ann.date), 'PPP p')}</p>
                                         </div>

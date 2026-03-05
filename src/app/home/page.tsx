@@ -8,7 +8,7 @@ import { Hero } from "@/components/home/hero";
 import { Projects } from "@/components/home/projects";
 import { IskaiChatbot } from "@/components/iskai-chatbot";
 import { Card, CardContent } from "@/components/ui/card";
-import { Megaphone, Users, Loader } from "lucide-react";
+import { Megaphone, Users, Loader, Calendar, MapPin } from "lucide-react";
 import { CurrentYear } from "@/components/current-year";
 import { MemberAuthGuard } from "@/components/auth/member-auth-guard";
 import { Badge } from "@/components/ui/badge";
@@ -66,7 +66,20 @@ export default function HomePage() {
                                                     {announcement.status}
                                                 </Badge>
                                             </div>
-                                            {announcement.eventDate && <p className="text-sm text-muted-foreground">{format(parseISO(announcement.eventDate), "MMMM d, yyyy")}</p>}
+                                            <div className="space-y-1 mt-2">
+                                                {announcement.eventDate && (
+                                                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                                        <Calendar className="h-4 w-4" />
+                                                        <span>{format(parseISO(announcement.eventDate), "PPP 'at' p")}</span>
+                                                    </div>
+                                                )}
+                                                {announcement.location && (
+                                                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                                        <MapPin className="h-4 w-4" />
+                                                        <span>{announcement.location}</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                             <p className="text-muted-foreground pt-2">{announcement.content}</p>
                                         </div>
                                     </div>
