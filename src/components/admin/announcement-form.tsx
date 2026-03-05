@@ -5,10 +5,8 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
-import { Loader, Calendar as CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { Loader } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -29,8 +27,6 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import type { Announcement } from '@/lib/types';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { Calendar } from '../ui/calendar';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
@@ -38,7 +34,7 @@ const formSchema = z.object({
   location: z.string().optional(),
   status: z.enum(['Upcoming', 'Completed', 'Canceled', 'Ongoing']),
   type: z.enum(['general', 'assembly']),
-  eventDate: z.date({ required_error: 'A date for the event is required.' }),
+  eventDate: z.string().optional(),
 });
 
 interface AnnouncementFormProps {
@@ -58,7 +54,7 @@ export function AnnouncementForm({ announcement, onClose }: AnnouncementFormProp
       location: announcement?.location || '',
       status: announcement?.status || 'Upcoming',
       type: announcement?.type || 'general',
-      eventDate: announcement?.eventDate ? new Date(announcement.eventDate) : new Date(),
+      eventDate: announcement?.eventDate ? announcement.eventDate.slice(0, 16) : "",
     },
   });
 
@@ -75,7 +71,7 @@ export function AnnouncementForm({ announcement, onClose }: AnnouncementFormProp
             ...values,
             id: docRef.id,
             date: isEditing && announcement.date ? announcement.date : new Date().toISOString(),
-            eventDate: values.eventDate.toISOString(),
+            eventDate: values.eventDate ? new Date(values.eventDate).toISOString() : undefined,
         };
 
         setDocumentNonBlocking(docRef, dataToSave, { merge: true });
@@ -128,7 +124,7 @@ export function AnnouncementForm({ announcement, onClose }: AnnouncementFormProp
           name="location"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Location</FormLabel>
+              <FormLabel>Location (Optional)</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Barangay Hall" {...field} />
               </FormControl>
@@ -140,36 +136,11 @@ export function AnnouncementForm({ announcement, onClose }: AnnouncementFormProp
             control={form.control}
             name="eventDate"
             render={({ field }) => (
-                <FormItem className="flex flex-col">
-                <FormLabel>Date of Event</FormLabel>
-                <Popover>
-                    <PopoverTrigger asChild>
-                    <FormControl>
-                        <Button
-                        variant={"outline"}
-                        className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                        )}
-                        >
-                        {field.value ? (
-                            format(field.value, "PPP")
-                        ) : (
-                            <span>Pick a date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                    </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                    />
-                    </PopoverContent>
-                </Popover>
+                <FormItem>
+                <FormLabel>Date & Time of Event (Optional)</FormLabel>
+                <FormControl>
+                    <Input type="datetime-local" {...field} />
+                </FormControl>
                 <FormMessage />
                 </FormItem>
             )}
