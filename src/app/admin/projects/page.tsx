@@ -111,8 +111,8 @@ export default function ProjectsPage() {
     const dataToSave = {
       ...restOfValues,
       id: docRef.id,
-      startDate: values.startDate.toISOString(),
-      endDate: values.endDate.toISOString(),
+      startDate: new Date(values.startDate).toISOString(),
+      endDate: new Date(values.endDate).toISOString(),
       imageUrls: imageUrlsToSave,
     };
 

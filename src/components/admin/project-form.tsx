@@ -3,10 +3,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Loader, Calendar as CalendarIcon } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { Loader } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -25,8 +23,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
 import type { Project } from '@/lib/types';
 
@@ -35,8 +31,8 @@ const formSchema = z.object({
   status: z.enum(['Planning', 'Pending Approval', 'In Progress']),
   budget: z.string().min(1, 'Budget is required.'),
   description: z.string().min(1, 'Description is required.'),
-  startDate: z.date({ required_error: 'A start date is required.' }),
-  endDate: z.date({ required_error: 'An end date is required.' }),
+  startDate: z.string().min(1, 'A start date is required.'),
+  endDate: z.string().min(1, 'An end date is required.'),
   imageUrls: z.any().optional(),
 });
 
@@ -56,8 +52,8 @@ export function ProjectForm({ project, onSave, onClose }: ProjectFormProps) {
       status: (project?.status as 'Planning' | 'Pending Approval' | 'In Progress') || 'Planning',
       budget: project?.budget || '₱0',
       description: project?.description || '',
-      startDate: project ? parseISO(project.startDate) : new Date(),
-      endDate: project ? parseISO(project.endDate) : new Date(),
+      startDate: project ? project.startDate.slice(0, 16) : "",
+      endDate: project ? project.endDate.slice(0, 16) : "",
     },
   });
 
@@ -148,37 +144,12 @@ export function ProjectForm({ project, onSave, onClose }: ProjectFormProps) {
                 control={form.control}
                 name="startDate"
                 render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                    <FormLabel>Start Date</FormLabel>
-                    <Popover>
-                        <PopoverTrigger asChild>
+                    <FormItem>
+                        <FormLabel>Start Date & Time</FormLabel>
                         <FormControl>
-                            <Button
-                            variant={"outline"}
-                            className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                            )}
-                            >
-                            {field.value ? (
-                                format(field.value, "PPP")
-                            ) : (
-                                <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
+                            <Input type="datetime-local" {...field} />
                         </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                        />
-                        </PopoverContent>
-                    </Popover>
-                    <FormMessage />
+                        <FormMessage />
                     </FormItem>
                 )}
             />
@@ -186,37 +157,12 @@ export function ProjectForm({ project, onSave, onClose }: ProjectFormProps) {
                 control={form.control}
                 name="endDate"
                 render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                    <FormLabel>End Date</FormLabel>
-                    <Popover>
-                        <PopoverTrigger asChild>
+                    <FormItem>
+                        <FormLabel>End Date & Time</FormLabel>
                         <FormControl>
-                            <Button
-                            variant={"outline"}
-                            className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                            )}
-                            >
-                            {field.value ? (
-                                format(field.value, "PPP")
-                            ) : (
-                                <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
+                            <Input type="datetime-local" {...field} />
                         </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                        />
-                        </PopoverContent>
-                    </Popover>
-                    <FormMessage />
+                        <FormMessage />
                     </FormItem>
                 )}
             />
