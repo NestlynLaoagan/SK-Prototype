@@ -18,6 +18,16 @@ import { signOut } from "firebase/auth"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { ThemeToggle } from "../theme-toggle"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export function AdminSidebar() {
     const pathname = usePathname();
@@ -25,20 +35,20 @@ export function AdminSidebar() {
     const { toast } = useToast();
     const router = useRouter();
 
-    const handleSignOut = async () => {
+    const handleLogOut = async () => {
         try {
             await signOut(auth);
             toast({
-                title: "Signed Out",
-                description: "You have been successfully signed out.",
+                title: "Logged Out",
+                description: "You have been successfully logged out.",
             });
             router.replace('/login');
         } catch (error) {
-            console.error("Sign out failed:", error);
+            console.error("Log out failed:", error);
             toast({
                 variant: "destructive",
-                title: "Sign Out Failed",
-                description: "Could not sign you out. Please try again.",
+                title: "Log Out Failed",
+                description: "Could not log you out. Please try again.",
             });
         }
     }
@@ -156,10 +166,23 @@ export function AdminSidebar() {
                     </Link>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton onClick={handleSignOut} tooltip="Sign Out">
-                        <LogOut />
-                        <span>Sign Out</span>
-                    </SidebarMenuButton>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <SidebarMenuButton tooltip="Log Out">
+                          <LogOut />
+                          <span>Log Out</span>
+                      </SidebarMenuButton>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                          <AlertDialogTitle>Do you want to log out?</AlertDialogTitle>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                          <AlertDialogCancel>No</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleLogOut}>Yes</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </SidebarMenuItem>
             </SidebarMenu>
         </SidebarFooter>
