@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -105,8 +106,10 @@ export default function ProjectsPage() {
         imageUrlsToSave = [...imageUrlsToSave, ...newImageUrls];
     }
     
+    const { imageUrls, ...restOfValues } = values;
+
     const dataToSave = {
-      ...values,
+      ...restOfValues,
       id: docRef.id,
       startDate: values.startDate.toISOString(),
       endDate: values.endDate.toISOString(),
