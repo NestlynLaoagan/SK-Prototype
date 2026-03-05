@@ -1,12 +1,21 @@
+"use client";
+
 import { AdminAuthGuard } from "@/components/admin/admin-auth-guard";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { usePathname } from "next/navigation";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const pathname = usePathname();
+
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
   return (
     <SidebarProvider>
         <AdminSidebar />
