@@ -7,9 +7,10 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Check, Loader } from "lucide-react";
-import { useFirebase, useUser, setDocumentNonBlocking } from "@/firebase";
+import { useFirebase, useUser, setDocumentNonBlocking, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
+import type { User as UserModel } from "@/lib/types";
 
 
 import { cn } from "@/lib/utils";
@@ -69,28 +70,53 @@ const formSchema = z.object({
 export function ProfileForm() {
   const router = useRouter();
   const { firestore, auth } = useFirebase();
-  const { user, isUserLoading } = useUser();
+  const { user, isUserLoading: isAuthLoading } = useUser();
   const [showSpecialNeeds, setShowSpecialNeeds] = useState(false);
   const [age, setAge] = useState<number | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  
+  const userDocRef = useMemoFirebase(() => (user ? doc(firestore, 'users', user.uid) : null), [user, firestore]);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserModel>(userDocRef);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-        fullName: user?.displayName || "",
-        email: user?.email || "",
-        contactNumber: "+639",
-        specialNeeds: "",
+      fullName: "",
+      email: "",
+      contactNumber: "+639",
+      specialNeeds: "",
     }
   });
 
-  // Pre-fill form with user data from auth
+  // Pre-fill form with user data from firestore profile or auth
   useEffect(() => {
-    if (user) {
-        form.setValue('fullName', user.displayName || "");
-        form.setValue('email', user.email || "");
+    if (userProfile) {
+        form.reset({
+            fullName: userProfile.fullName || "",
+            email: userProfile.email || "",
+            address: userProfile.address || "",
+            contactNumber: userProfile.contactNumber || "+639",
+            birthdate: userProfile.birthdate ? new Date(userProfile.birthdate) : undefined,
+            gender: userProfile.gender as "male" | "female" | undefined,
+            civilStatus: userProfile.civilStatus,
+            workStatus: userProfile.workStatus,
+            youthAgeGroup: userProfile.youthAgeGroup,
+            youthClassification: userProfile.youthClassification,
+            specialNeeds: userProfile.specialNeeds || "",
+            educationalBackground: userProfile.educationalBackground,
+            isSkVoter: userProfile.isSkVoter === true ? "yes" : userProfile.isSkVoter === false ? "no" : undefined,
+            votedLastElection: userProfile.votedLastElection === true ? "yes" : userProfile.votedLastElection === false ? "no" : undefined,
+            isNationalVoter: userProfile.isNationalVoter === true ? "yes" : userProfile.isNationalVoter === false ? "no" : undefined,
+        });
+    } else if (user) {
+        // Fallback for when profile doesn't exist yet
+        form.reset({
+            ...form.getValues(),
+            fullName: user.displayName || "",
+            email: user.email || "",
+        });
     }
-  }, [user, form]);
+  }, [user, userProfile, form]);
 
   const birthdate = form.watch("birthdate");
   const { setValue } = form;
@@ -125,8 +151,10 @@ export function ProfileForm() {
     setShowSpecialNeeds(youthClassification === 'youth with special needs');
    }, [youthClassification]);
 
+  const isInitialSetup = !userProfile?.birthdate;
+  const isLoading = form.formState.isSubmitting || isAuthLoading || isProfileLoading;
 
-  if (isUserLoading) {
+  if (isAuthLoading || (user && isProfileLoading)) {
     return <div className="flex items-center justify-center min-h-[50vh]"><Loader className="h-8 w-8 animate-spin" /></div>;
   }
 
@@ -164,8 +192,6 @@ export function ProfileForm() {
         router.push("/home");
     }, 2500);
   }
-
-  const isLoading = form.formState.isSubmitting;
 
   return (
     <>
@@ -287,7 +313,7 @@ export function ProfileForm() {
                     <FormControl>
                         <RadioGroup
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                         className="flex items-center space-x-4"
                         >
                         <FormItem className="flex items-center space-x-2 space-y-0">
@@ -314,7 +340,7 @@ export function ProfileForm() {
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Civil Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Choose" /></SelectTrigger></FormControl>
                             <SelectContent>
                                 <SelectItem value="single">Single</SelectItem>
@@ -335,7 +361,7 @@ export function ProfileForm() {
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Work Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Choose status" /></SelectTrigger></FormControl>
                             <SelectContent>
                                 <SelectItem value="employed">Employed</SelectItem>
@@ -374,7 +400,7 @@ export function ProfileForm() {
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Youth Classification</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Choose" /></SelectTrigger></FormControl>
                             <SelectContent>
                                 <SelectItem value="in-school">In school youth</SelectItem>
@@ -407,7 +433,7 @@ export function ProfileForm() {
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Educational Background</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Choose attainment" /></SelectTrigger></FormControl>
                         <SelectContent>
                             <SelectItem value="elementary">Elementary</SelectItem>
@@ -430,7 +456,7 @@ export function ProfileForm() {
                         <FormItem className="space-y-2">
                         <FormLabel>Registered SK Voter?</FormLabel>
                         <FormControl>
-                            <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-4">
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-4">
                             <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
                             <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
                             </RadioGroup>
@@ -446,7 +472,7 @@ export function ProfileForm() {
                         <FormItem className="space-y-2">
                         <FormLabel>Voted Last Election?</FormLabel>
                         <FormControl>
-                            <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-4">
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-4">
                             <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
                             <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
                             </RadioGroup>
@@ -462,7 +488,7 @@ export function ProfileForm() {
                         <FormItem className="space-y-2">
                         <FormLabel>National Voter?</FormLabel>
                         <FormControl>
-                            <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-4">
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-4">
                             <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
                             <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
                             </RadioGroup>
@@ -474,24 +500,32 @@ export function ProfileForm() {
             </div>
             
              <div className="flex flex-col items-center mt-6 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                    <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="lg" 
-                        className="w-full rounded-full shadow-md font-bold" 
-                        onClick={() => router.push('/home')}
-                        disabled={isLoading}
-                    >
-                        CANCEL
-                    </Button>
+                <div className={cn(
+                    "grid w-full gap-4",
+                    isInitialSetup ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"
+                )}>
+                    {!isInitialSetup && (
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="lg" 
+                            className="w-full rounded-full shadow-md font-bold" 
+                            onClick={() => router.push('/home')}
+                            disabled={isLoading}
+                        >
+                            CANCEL
+                        </Button>
+                    )}
                     <Button 
                         type="submit" 
                         size="lg" 
-                        className="w-full bg-primary hover:bg-primary/90 text-white font-bold rounded-full transition-all shadow-md" 
+                        className={cn(
+                            "w-full bg-primary hover:bg-primary/90 text-white font-bold rounded-full transition-all shadow-md",
+                            isInitialSetup && "sm:col-span-1"
+                        )} 
                         disabled={isLoading}
                     >
-                        {isLoading ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : "SUBMIT FORM"}
+                        {isLoading ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : (isInitialSetup ? "SUBMIT FORM" : "SAVE CHANGES")}
                     </Button>
                 </div>
                 <p className="text-center text-[10px] italic text-muted-foreground uppercase tracking-widest">
