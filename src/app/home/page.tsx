@@ -50,24 +50,27 @@ export default function HomePage() {
                        return (
                         <Card key={announcement.id}>
                             <CardContent className="p-6">
-                                <div className="flex items-start gap-4">
-                                    <AnnIcon className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                                    <div className="flex-1 space-y-1">
-                                        <div className="flex items-center gap-2">
-                                            <h3 className="font-semibold text-lg">{announcement.title}</h3>
-                                            <Badge className={cn(
-                                                "capitalize",
-                                                announcement.status === 'Completed' && 'bg-green-100 text-green-800 border-green-200',
-                                                announcement.status === 'Upcoming' && 'bg-yellow-100 text-yellow-800 border-yellow-200',
-                                                announcement.status === 'Canceled' && 'bg-red-100 text-red-800 border-red-200',
-                                                announcement.status === 'Ongoing' && 'bg-blue-100 text-blue-800 border-blue-200'
-                                            )}>
-                                                {announcement.status}
-                                            </Badge>
+                                <div className="flex flex-col">
+                                    <div className="flex items-start gap-4">
+                                        <AnnIcon className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                                        <div className="flex-1 space-y-1">
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="font-semibold text-lg">{announcement.title}</h3>
+                                                <Badge className={cn(
+                                                    "capitalize",
+                                                    announcement.status === 'Completed' && 'bg-green-100 text-green-800 border-green-200',
+                                                    announcement.status === 'Upcoming' && 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                                                    announcement.status === 'Canceled' && 'bg-red-100 text-red-800 border-red-200',
+                                                    announcement.status === 'Ongoing' && 'bg-blue-100 text-blue-800 border-blue-200'
+                                                )}>
+                                                    {announcement.status}
+                                                </Badge>
+                                            </div>
+                                            {announcement.eventDate && <p className="text-sm text-muted-foreground">{format(parseISO(announcement.eventDate), "MMMM d, yyyy")}</p>}
+                                            <p className="text-muted-foreground pt-2">{announcement.content}</p>
                                         </div>
-                                        <p className="text-sm text-muted-foreground">{format(parseISO(announcement.date), "MMMM d, yyyy")}</p>
-                                        <p className="text-muted-foreground pt-2">{announcement.content}</p>
                                     </div>
+                                    <p className="text-xs text-muted-foreground text-right mt-2">Posted on {format(parseISO(announcement.date), "MMM d, yyyy, p")}</p>
                                 </div>
                             </CardContent>
                         </Card>

@@ -5,8 +5,10 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
-import { Loader } from 'lucide-react';
+import { Loader, Calendar as CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -27,12 +29,15 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import type { Announcement } from '@/lib/types';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Calendar } from '../ui/calendar';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
   content: z.string().min(1, 'Content is required.'),
   status: z.enum(['Upcoming', 'Completed', 'Canceled', 'Ongoing']),
   type: z.enum(['general', 'assembly']),
+  eventDate: z.date({ required_error: 'A date for the event is required.' }),
 });
 
 interface AnnouncementFormProps {
@@ -51,6 +56,7 @@ export function AnnouncementForm({ announcement, onClose }: AnnouncementFormProp
       content: announcement?.content || '',
       status: announcement?.status || 'Upcoming',
       type: announcement?.type || 'general',
+      eventDate: announcement?.eventDate ? new Date(announcement.eventDate) : new Date(),
     },
   });
 
@@ -66,7 +72,8 @@ export function AnnouncementForm({ announcement, onClose }: AnnouncementFormProp
         const dataToSave = {
             ...values,
             id: docRef.id,
-            date: new Date().toISOString(),
+            date: isEditing && announcement.date ? announcement.date : new Date().toISOString(),
+            eventDate: values.eventDate.toISOString(),
         };
 
         setDocumentNonBlocking(docRef, dataToSave, { merge: true });
@@ -113,6 +120,44 @@ export function AnnouncementForm({ announcement, onClose }: AnnouncementFormProp
               <FormMessage />
             </FormItem>
           )}
+        />
+        <FormField
+            control={form.control}
+            name="eventDate"
+            render={({ field }) => (
+                <FormItem className="flex flex-col">
+                <FormLabel>Date of Event</FormLabel>
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <FormControl>
+                        <Button
+                        variant={"outline"}
+                        className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                        )}
+                        >
+                        {field.value ? (
+                            format(field.value, "PPP")
+                        ) : (
+                            <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                    </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                    />
+                    </PopoverContent>
+                </Popover>
+                <FormMessage />
+                </FormItem>
+            )}
         />
          <FormField
           control={form.control}

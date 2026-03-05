@@ -24,7 +24,8 @@ export type Announcement = {
     id: string;
     title: string;
     content: string;
-    date: string; // ISO 8601 date string
+    date: string; // ISO 8601 date string - This is the creation/posted date.
+    eventDate?: string; // ISO 8601 date string - This is the date of the event itself.
     status: 'Upcoming' | 'Completed' | 'Canceled' | 'Ongoing';
     type?: 'general' | 'assembly';
 };

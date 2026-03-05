@@ -131,7 +131,7 @@ export default function AdminDashboardPage() {
                                 <div className="p-4 flex justify-between items-start">
                                     <div className="flex-1 flex items-start gap-4">
                                         <AnnIcon className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                                        <div className="flex-1 space-y-1">
+                                        <div className="flex-1 flex flex-col">
                                             <div className="flex items-center gap-2">
                                                 <p className="font-medium text-foreground">{ann.title}</p>
                                                 <Badge className={cn(
@@ -144,10 +144,9 @@ export default function AdminDashboardPage() {
                                                     {ann.status}
                                                 </Badge>
                                             </div>
-                                            <p className="text-xs text-muted-foreground">
-                                                {format(parseISO(ann.date), 'PPP p')}
-                                            </p>
+                                            {ann.eventDate && <p className="text-sm text-muted-foreground">{format(parseISO(ann.eventDate), 'PPP')}</p>}
                                             <p className="text-sm text-muted-foreground pt-2">{ann.content}</p>
+                                            <p className="text-xs text-muted-foreground text-right mt-2">Posted on {format(parseISO(ann.date), 'PPP p')}</p>
                                         </div>
                                     </div>
                                     <div className="flex-shrink-0">
