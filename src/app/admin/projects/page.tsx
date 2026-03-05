@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PlusCircle, MoreHorizontal, Trash2, Edit, CheckCircle, Loader } from "lucide-react";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,7 +37,7 @@ import type { Project } from "@/lib/types";
 
 
 export default function ProjectsPage() {
-  const { firestore } = useFirebase();
+  const { firestore, firebaseApp } = useFirebase();
   const { toast } = useToast();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -68,19 +69,48 @@ export default function ProjectsPage() {
     setIsFormOpen(true);
   }
 
-  const handleSaveProject = (values: any) => {
-    if (!firestore) return;
+  const handleSaveProject = async (values: any) => {
+    if (!firestore || !firebaseApp) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Firebase is not available. Cannot save project.",
+        });
+        throw new Error("Firebase not available");
+    }
 
     const isEditing = !!projectToEdit;
     const docRef = isEditing
       ? doc(firestore, 'projects', projectToEdit.id)
       : doc(collection(firestore, 'projects'));
 
+    let imageUrlsToSave: string[] = projectToEdit?.imageUrls || [];
+
+    if (values.imageUrls && values.imageUrls.length > 0) {
+        const storage = getStorage(firebaseApp);
+        const fileList = values.imageUrls as FileList;
+
+        toast({
+            title: "Uploading Images...",
+            description: `Uploading ${fileList.length} image(s). Please wait.`,
+        });
+
+        const uploadPromises = Array.from(fileList).map(async (file) => {
+            const fileRef = storageRef(storage, `project-images/${docRef.id}/${file.name}`);
+            await uploadBytes(fileRef, file);
+            return getDownloadURL(fileRef);
+        });
+
+        const newImageUrls = await Promise.all(uploadPromises);
+        imageUrlsToSave = [...imageUrlsToSave, ...newImageUrls];
+    }
+    
     const dataToSave = {
       ...values,
       id: docRef.id,
       startDate: values.startDate.toISOString(),
       endDate: values.endDate.toISOString(),
+      imageUrls: imageUrlsToSave,
     };
 
     setDocumentNonBlocking(docRef, dataToSave, { merge: true });

@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Loader, Calendar as CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -42,7 +42,7 @@ const formSchema = z.object({
 
 interface ProjectFormProps {
   project?: Project;
-  onSave: (values: z.infer<typeof formSchema>) => void;
+  onSave: (values: z.infer<typeof formSchema>) => Promise<void>;
   onClose: () => void;
 }
 
@@ -64,9 +64,9 @@ export function ProjectForm({ project, onSave, onClose }: ProjectFormProps) {
   const isLoading = form.formState.isSubmitting;
   const isEditing = !!project;
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-        onSave(values);
+        await onSave(values);
         toast({
             title: isEditing ? 'Project Updated' : 'Project Created',
             description: `The project "${values.name}" has been saved.`,
