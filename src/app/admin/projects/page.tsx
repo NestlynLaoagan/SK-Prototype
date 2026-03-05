@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusCircle, MoreHorizontal, Trash2, Edit, CheckCircle } from "lucide-react";
+import { PlusCircle, MoreHorizontal, Trash2, Edit, CheckCircle, Loader } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,39 +29,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ProjectForm } from "@/components/admin/project-form";
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
+import { useFirebase, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
+import { collection, doc, query, where } from "firebase/firestore";
+import type { Project } from "@/lib/types";
 
-
-export type Project = {
-    id: number;
-    name: string;
-    status: string;
-    budget: string;
-    description: string;
-    targetDate: string;
-};
-
-type AccomplishedProject = {
-    id: number;
-    name: string;
-    date: string;
-    report: string;
-};
-
-const initialUpcomingProjects: Project[] = [
-    { id: 1, name: "Community Garden Phase 2", status: "In Progress", budget: "₱50,000", description: "Phase 2 of the community garden project.", targetDate: "2025-06-30" },
-    { id: 2, name: "Youth Sports Fest 2025", status: "Planning", budget: "₱120,000", description: "Annual sports festival for the youth.", targetDate: "2025-04-15" },
-    { id: 3, name: "Barangay Hall Repainting", status: "Pending Approval", budget: "₱30,000", description: "Repainting of the barangay hall.", targetDate: "2025-03-01" },
-];
-
-const initialAccomplishedProjects: AccomplishedProject[] = [
-    { id: 1, name: "Community Pantry Initiative", date: "Oct 2024", report: "PDF" },
-    { id: 2, name: "Barangay-wide Cleanup Drive", date: "Sep 2024", report: "DOCX" },
-];
 
 export default function ProjectsPage() {
-  const [upcomingProjects, setUpcomingProjects] = useState<Project[]>(initialUpcomingProjects);
-  const [accomplishedProjects, setAccomplishedProjects] = useState<AccomplishedProject[]>(initialAccomplishedProjects);
+  const { firestore } = useFirebase();
   const { toast } = useToast();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -69,6 +44,19 @@ export default function ProjectsPage() {
   
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [projectToMarkDone, setProjectToMarkDone] = useState<Project | null>(null);
+  
+  const projectsCollectionRef = useMemoFirebase(() => firestore ? collection(firestore, 'projects') : null, [firestore]);
+  
+  const upcomingProjectsQuery = useMemoFirebase(() => 
+    projectsCollectionRef ? query(projectsCollectionRef, where("status", "!=", "Completed")) : null, 
+  [projectsCollectionRef]);
+
+  const accomplishedProjectsQuery = useMemoFirebase(() => 
+    projectsCollectionRef ? query(projectsCollectionRef, where("status", "==", "Completed")) : null,
+  [projectsCollectionRef]);
+
+  const { data: upcomingProjects, isLoading: isLoadingUpcoming } = useCollection<Project>(upcomingProjectsQuery);
+  const { data: accomplishedProjects, isLoading: isLoadingAccomplished } = useCollection<Project>(accomplishedProjectsQuery);
 
   const handleAddProject = () => {
     setProjectToEdit(undefined);
@@ -80,35 +68,27 @@ export default function ProjectsPage() {
     setIsFormOpen(true);
   }
 
-  const handleSaveProject = (savedProjectData: Omit<Project, 'id' | 'targetDate'> & { id?: number; targetDate: Date | string }) => {
-    
-    const projectWithDateString = {
-        ...savedProjectData,
-        targetDate: typeof savedProjectData.targetDate === 'string' 
-            ? savedProjectData.targetDate 
-            : format(savedProjectData.targetDate, 'yyyy-MM-dd')
+  const handleSaveProject = (values: any) => {
+    if (!firestore) return;
+
+    const isEditing = !!projectToEdit;
+    const docRef = isEditing
+      ? doc(firestore, 'projects', projectToEdit.id)
+      : doc(collection(firestore, 'projects'));
+
+    const dataToSave = {
+      ...values,
+      id: docRef.id,
+      startDate: values.startDate.toISOString(),
+      endDate: values.endDate.toISOString(),
     };
 
-    if (savedProjectData.id) {
-        // Editing existing project
-        setUpcomingProjects(upcomingProjects.map(p => p.id === savedProjectData.id ? { ...p, ...projectWithDateString, id: p.id } : p));
-    } else {
-        // Adding new project
-        const newProject: Project = {
-            id: Math.max(...upcomingProjects.map(p => p.id), 0) + 1,
-            name: projectWithDateString.name,
-            status: projectWithDateString.status,
-            budget: projectWithDateString.budget,
-            description: projectWithDateString.description,
-            targetDate: projectWithDateString.targetDate
-        };
-        setUpcomingProjects([...upcomingProjects, newProject]);
-    }
+    setDocumentNonBlocking(docRef, dataToSave, { merge: true });
   };
 
   const handleDeleteConfirm = () => {
-    if (!projectToDelete) return;
-    setUpcomingProjects(upcomingProjects.filter(p => p.id !== projectToDelete.id));
+    if (!projectToDelete || !firestore) return;
+    deleteDocumentNonBlocking(doc(firestore, 'projects', projectToDelete.id));
     toast({
       title: "Project deleted",
       description: `The project "${projectToDelete.name}" has been successfully deleted.`,
@@ -118,20 +98,8 @@ export default function ProjectsPage() {
   };
 
   const handleDoneConfirm = () => {
-    if (!projectToMarkDone) return;
-
-    // Remove from upcoming
-    setUpcomingProjects(upcomingProjects.filter(p => p.id !== projectToMarkDone.id));
-
-    // Add to accomplished
-    const newAccomplishedProject: AccomplishedProject = {
-        id: projectToMarkDone.id,
-        name: projectToMarkDone.name,
-        date: format(new Date(), 'MMM yyyy'),
-        report: "PDF" // Default report type
-    };
-    setAccomplishedProjects([newAccomplishedProject, ...accomplishedProjects]);
-
+    if (!projectToMarkDone || !firestore) return;
+    updateDocumentNonBlocking(doc(firestore, 'projects', projectToMarkDone.id), { status: 'Completed' });
     toast({
         title: "Project Accomplished!",
         description: `"${projectToMarkDone.name}" has been moved to Accomplished Projects.`,
@@ -163,17 +131,20 @@ export default function ProjectsPage() {
                 <TableHeader>
                     <TableRow>
                         <TableHead>Project Name</TableHead>
-                        <TableHead>Target Date</TableHead>
+                        <TableHead>End Date</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Budget</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {upcomingProjects.map(project => (
+                    {isLoadingUpcoming && (
+                        <TableRow><TableCell colSpan={5} className="text-center"><Loader className="mx-auto h-6 w-6 animate-spin" /></TableCell></TableRow>
+                    )}
+                    {upcomingProjects?.map(project => (
                         <TableRow key={project.id}>
                             <TableCell className="font-medium">{project.name}</TableCell>
-                            <TableCell>{format(new Date(project.targetDate), "MMM d, yyyy")}</TableCell>
+                            <TableCell>{format(parseISO(project.endDate), "MMM d, yyyy")}</TableCell>
                             <TableCell>{project.status}</TableCell>
                             <TableCell>{project.budget}</TableCell>
                             <TableCell className="text-right">
@@ -221,12 +192,15 @@ export default function ProjectsPage() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {accomplishedProjects.map(project => (
+                    {isLoadingAccomplished && (
+                         <TableRow><TableCell colSpan={3} className="text-center"><Loader className="mx-auto h-6 w-6 animate-spin" /></TableCell></TableRow>
+                    )}
+                    {accomplishedProjects?.map(project => (
                         <TableRow key={project.id}>
                             <TableCell className="font-medium">{project.name}</TableCell>
-                            <TableCell>{project.date}</TableCell>
+                            <TableCell>{format(parseISO(project.endDate), "MMM yyyy")}</TableCell>
                             <TableCell className="text-right">
-                                <Button variant="outline">Download as {project.report}</Button>
+                                <Button variant="outline">Download Report</Button>
                             </TableCell>
                         </TableRow>
                     ))}
@@ -237,7 +211,7 @@ export default function ProjectsPage() {
 
       {/* Dialog for Add/Edit Form */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-xl">
               <DialogHeader>
                   <DialogTitle>{projectToEdit ? "Edit Project" : "Add New Project"}</DialogTitle>
               </DialogHeader>

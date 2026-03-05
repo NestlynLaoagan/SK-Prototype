@@ -45,3 +45,15 @@ export type Event = {
     end: string; // ISO 8601
     status: 'Planning' | 'Upcoming' | 'Ongoing' | 'Finished';
 };
+
+export type Project = {
+    id: string;
+    name: string;
+    description: string;
+    budget: string;
+    startDate: string; // ISO String
+    endDate: string; // ISO String
+    status: 'Planning' | 'Pending Approval' | 'In Progress' | 'Completed';
+    imageUrls?: string[];
+    reportUrls?: string[];
+};

@@ -4,18 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Filter } from "lucide-react";
+import { Download, Filter, Loader } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-const profiles = [
-    { id: 1, name: "Juan Dela Cruz", age: 25, gender: "Male", civilStatus: "Single", workStatus: "Employed" },
-    { id: 2, name: "Maria Clara", age: 22, gender: "Female", civilStatus: "Single", workStatus: "Student" },
-    { id: 3, name: "Crisostomo Ibarra", age: 28, gender: "Male", civilStatus: "Married", workStatus: "Self-Employed" },
-    { id: 4, name: "Sisa", age: 30, gender: "Female", civilStatus: "Widowed", workStatus: "Unemployed" },
-];
+import { useFirebase, useCollection, useMemoFirebase } from "@/firebase";
+import { collection } from "firebase/firestore";
+import type { User as UserModel } from "@/lib/types";
 
 export default function ProfilesPage() {
   const { toast } = useToast();
+  const { firestore } = useFirebase();
+
+  const usersCollectionRef = useMemoFirebase(() => firestore ? collection(firestore, 'users') : null, [firestore]);
+  const { data: profiles, isLoading } = useCollection<UserModel>(usersCollectionRef);
 
   const handleExport = () => {
     toast({
@@ -66,13 +66,20 @@ export default function ProfilesPage() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {profiles.map(profile => (
+                    {isLoading && (
+                        <TableRow>
+                            <TableCell colSpan={5} className="text-center">
+                                <Loader className="mx-auto h-6 w-6 animate-spin" />
+                            </TableCell>
+                        </TableRow>
+                    )}
+                    {profiles?.map(profile => (
                         <TableRow key={profile.id}>
-                            <TableCell className="font-medium">{profile.name}</TableCell>
-                            <TableCell>{profile.age}</TableCell>
-                            <TableCell>{profile.gender}</TableCell>
-                            <TableCell>{profile.civilStatus}</TableCell>
-                            <TableCell>{profile.workStatus}</TableCell>
+                            <TableCell className="font-medium">{profile.fullName}</TableCell>
+                            <TableCell>{profile.age || 'N/A'}</TableCell>
+                            <TableCell>{profile.gender || 'N/A'}</TableCell>
+                            <TableCell>{profile.civilStatus || 'N/A'}</TableCell>
+                            <TableCell>{profile.workStatus || 'N/A'}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
