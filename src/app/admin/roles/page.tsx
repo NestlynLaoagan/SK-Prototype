@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -25,32 +26,33 @@ import { PasswordInput } from "@/components/ui/password-input";
 
 const ADMIN_PASSWORD = "SKBAKAKENG@CCX23";
 
+type UserToUpdate = {
+    id: string;
+    fullName: string;
+    role: 'member' | 'admin';
+}
+
 export default function RolesPage() {
   const { firestore } = useFirebase();
   const usersCollectionRef = useMemoFirebase(() => firestore ? collection(firestore, 'users') : null, [firestore]);
   const { data: users, isLoading } = useCollection<UserModel>(usersCollectionRef);
 
-  const [localUsers, setLocalUsers] = useState<UserModel[]>([]);
-  const [userToUpdate, setUserToUpdate] = useState<UserModel | null>(null);
+  const [userToUpdate, setUserToUpdate] = useState<UserToUpdate | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [stagedRoles, setStagedRoles] = useState<Record<string, 'member' | 'admin'>>({});
+
   const { toast } = useToast();
-  
-  useEffect(() => {
-    if (users) {
-      setLocalUsers(users);
-    }
-  }, [users]);
 
   const handleRoleChange = (userId: string, role: "member" | "admin") => {
-    setLocalUsers(prev => prev.map(user => user.id === userId ? { ...user, role } : user));
+    setStagedRoles(prev => ({ ...prev, [userId]: role }));
   };
 
-  const handleSaveClick = (userId: string) => {
-    const user = localUsers.find(u => u.id === userId);
-    if (user) {
-      setUserToUpdate(user);
+  const handleSaveClick = (user: UserModel) => {
+    const newRole = stagedRoles[user.id];
+    if (newRole && newRole !== user.role) {
+      setUserToUpdate({ id: user.id, fullName: user.fullName, role: newRole });
       setIsAlertOpen(true);
     }
   };
@@ -62,17 +64,23 @@ export default function RolesPage() {
             description: "Incorrect admin password. Role change was not saved.",
             variant: "destructive",
         });
-        // Don't close the dialog on failure
         return; 
     }
     
-    if (userToUpdate) {
+    if (userToUpdate && firestore) {
         const userDocRef = doc(firestore, 'users', userToUpdate.id);
-        // Use non-blocking update
         updateDocumentNonBlocking(userDocRef, { role: userToUpdate.role }, { merge: true });
+        
         toast({
             title: "Role Saved",
             description: `Role for ${userToUpdate.fullName} has been updated to ${userToUpdate.role}.`,
+        });
+
+        // Clear the staged change for this user
+        setStagedRoles(prev => {
+            const newState = { ...prev };
+            delete newState[userToUpdate.id];
+            return newState;
         });
     }
     
@@ -86,12 +94,12 @@ export default function RolesPage() {
   }
 
   const filteredUsers = useMemo(() => {
-    if (!localUsers) return [];
-    return localUsers.filter(user => 
+    if (!users) return [];
+    return users.filter(user => 
         user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
-  }, [localUsers, searchTerm]);
+  }, [users, searchTerm]);
 
   return (
     <div className="space-y-8">
@@ -134,35 +142,41 @@ export default function RolesPage() {
                             </TableCell>
                         </TableRow>
                     )}
-                    {!isLoading && filteredUsers.map(user => (
-                        <TableRow key={user.id}>
-                            <TableCell className="font-medium">{user.fullName}</TableCell>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell>
-                                <Select 
-                                  value={user.role} 
-                                  onValueChange={(value: "member" | "admin") => handleRoleChange(user.id, value)}
-                                  disabled={user.email === 'barangay.admin.connect.v3@system.local'}
-                                >
-                                    <SelectTrigger className="w-[120px]">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="member">Member</SelectItem>
-                                        <SelectItem value="admin">Admin</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </TableCell>
-                            <TableCell className="text-right">
-                                <Button 
-                                  onClick={() => handleSaveClick(user.id)}
-                                  disabled={user.email === 'barangay.admin.connect.v3@system.local' || users?.find(u => u.id === user.id)?.role === user.role}
-                                >
-                                  Save
-                                </Button>
-                            </TableCell>
-                        </TableRow>
-                    ))}
+                    {!isLoading && filteredUsers.map(user => {
+                        const currentRole = stagedRoles[user.id] || user.role;
+                        const originalRole = user.role;
+                        const hasChanged = currentRole !== originalRole;
+
+                        return (
+                            <TableRow key={user.id}>
+                                <TableCell className="font-medium">{user.fullName}</TableCell>
+                                <TableCell>{user.email}</TableCell>
+                                <TableCell>
+                                    <Select 
+                                    value={currentRole} 
+                                    onValueChange={(value: "member" | "admin") => handleRoleChange(user.id, value)}
+                                    disabled={user.email === 'barangay.admin.connect.v3@system.local'}
+                                    >
+                                        <SelectTrigger className="w-[120px]">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="member">Member</SelectItem>
+                                            <SelectItem value="admin">Admin</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <Button 
+                                    onClick={() => handleSaveClick(user)}
+                                    disabled={user.email === 'barangay.admin.connect.v3@system.local' || !hasChanged}
+                                    >
+                                    Save
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        );
+                    })}
                 </TableBody>
             </Table>
         </CardContent>

@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useFirebase, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import type { Faq } from "@/lib/types";
@@ -32,16 +33,9 @@ export default function ChatbotPage() {
   const { toast } = useToast();
   
   const faqsCollectionRef = useMemoFirebase(() => firestore ? collection(firestore, 'faqs') : null, [firestore]);
-  const { data: firestoreFaqs, isLoading } = useCollection<Faq>(faqsCollectionRef);
+  const { data: faqs, isLoading } = useCollection<Faq>(faqsCollectionRef);
 
-  const [faqs, setFaqs] = useState<Faq[]>([]);
   const [faqToDelete, setFaqToDelete] = useState<Faq | null>(null);
-
-  useEffect(() => {
-    if (firestoreFaqs) {
-      setFaqs(firestoreFaqs);
-    }
-  }, [firestoreFaqs]);
 
   const handleAddFaq = () => {
     if (!firestore) return;
@@ -71,17 +65,13 @@ export default function ChatbotPage() {
     });
     setFaqToDelete(null);
   };
-
-  const handleFaqChange = (id: string, field: 'question' | 'answer', value: string) => {
-    setFaqs(faqs.map(faq => faq.id === id ? { ...faq, [field]: value } : faq));
-  };
   
-  const handleSaveOnBlur = (id: string) => {
+  const handleSaveOnBlur = (id: string, field: 'question' | 'answer', value: string) => {
     if (!firestore) return;
-    const faqToSave = faqs.find(f => f.id === id);
-    if (faqToSave) {
-        const docRef = doc(firestore, 'faqs', faqToSave.id);
-        setDocumentNonBlocking(docRef, faqToSave, { merge: true });
+    const faqToSave = faqs?.find(f => f.id === id);
+    if (faqToSave && faqToSave[field] !== value) {
+        const docRef = doc(firestore, 'faqs', id);
+        setDocumentNonBlocking(docRef, { [field]: value }, { merge: true });
         toast({
             title: "FAQ Saved",
             description: "Your changes have been saved automatically.",
@@ -100,7 +90,7 @@ export default function ChatbotPage() {
         <CardHeader className="flex flex-row items-center justify-between">
             <div>
                 <CardTitle>Manage FAQs</CardTitle>
-                <CardDescription>Add, edit, or delete frequently asked questions. Changes are saved automatically.</CardDescription>
+                <CardDescription>Add, edit, or delete frequently asked questions. Changes are saved automatically on blur.</CardDescription>
             </div>
             <Button onClick={handleAddFaq}>
                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -126,20 +116,18 @@ export default function ChatbotPage() {
                             </TableCell>
                         </TableRow>
                     )}
-                    {!isLoading && faqs.map(faq => (
+                    {!isLoading && faqs?.map(faq => (
                         <TableRow key={faq.id}>
                             <TableCell className="font-medium">
                                 <Textarea 
-                                    value={faq.question} 
-                                    onChange={(e) => handleFaqChange(faq.id, 'question', e.target.value)} 
-                                    onBlur={() => handleSaveOnBlur(faq.id)}
+                                    defaultValue={faq.question} 
+                                    onBlur={(e) => handleSaveOnBlur(faq.id, 'question', e.target.value)}
                                     className="h-24" />
                             </TableCell>
                             <TableCell>
                                 <Textarea 
-                                    value={faq.answer} 
-                                    onChange={(e) => handleFaqChange(faq.id, 'answer', e.target.value)} 
-                                    onBlur={() => handleSaveOnBlur(faq.id)}
+                                    defaultValue={faq.answer} 
+                                    onBlur={(e) => handleSaveOnBlur(faq.id, 'answer', e.target.value)}
                                     className="h-24" />
                             </TableCell>
                             <TableCell className="text-right">
