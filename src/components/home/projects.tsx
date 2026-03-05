@@ -9,9 +9,12 @@ import {
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel"
-import { PlaceHolderImages } from "@/lib/placeholder-images"
 import Image from "next/image"
 import { Card, CardContent } from "../ui/card"
+import { useFirebase, useCollection, useMemoFirebase } from "@/firebase"
+import { collection, query, where } from "firebase/firestore"
+import type { Project } from "@/lib/types"
+import { Loader } from "lucide-react"
 
 export function Projects() {
   const [mainApi, setMainApi] = React.useState<CarouselApi>()
@@ -22,12 +25,31 @@ export function Projects() {
     Autoplay({ delay: 3000, stopOnInteraction: true, stopOnMouseEnter: true })
   )
 
+  const { firestore } = useFirebase();
+  const accomplishedProjectsQuery = useMemoFirebase(() => 
+    firestore ? query(collection(firestore, 'projects'), where("status", "==", "Completed")) : null,
+  [firestore]);
+
+  const { data: projects, isLoading } = useCollection<Project>(accomplishedProjectsQuery);
+
+  const carouselItems = React.useMemo(() => {
+    if (!projects) return [];
+    return projects.map(project => ({
+      id: project.id,
+      description: project.name,
+      imageUrl: project.imageUrls?.[0] || `https://picsum.photos/seed/${project.id}/600/400`,
+      imageHint: "community project"
+    }));
+  }, [projects]);
+
+
   React.useEffect(() => {
     if (!mainApi || !thumbApi) {
       return
     }
 
     const onSelect = () => {
+      if (!mainApi || !thumbApi) return;
       setSelectedIndex(mainApi.selectedScrollSnap())
       thumbApi.scrollTo(mainApi.selectedScrollSnap())
     }
@@ -35,18 +57,11 @@ export function Projects() {
     mainApi.on("select", onSelect)
     mainApi.on('reInit', onSelect)
 
-    const onAutoplayPlay = () => {
-        // This function is called when autoplay starts.
-        // We can re-apply the stop on mouse enter logic here if needed.
-    }
-    mainApi.on('autoplay:play' as any, onAutoplayPlay)
-
     onSelect() // Set initial state
     
     return () => {
         mainApi.off("select", onSelect)
         mainApi.off('reInit', onSelect)
-        mainApi.off('autoplay:play' as any, onAutoplayPlay)
     }
   }, [mainApi, thumbApi])
 
@@ -62,56 +77,70 @@ export function Projects() {
             </div>
 
             <div className="w-full max-w-5xl">
-                 <Carousel
-                    setApi={setMainApi}
-                    plugins={[plugin.current]}
-                    className="w-full"
-                    onMouseEnter={plugin.current.stop}
-                    onMouseLeave={() => {
-                        plugin.current.play()
-                    }}
-                >
-                    <CarouselContent>
-                    {PlaceHolderImages.map((img, index) => (
-                        <CarouselItem key={index}>
-                            <Card>
-                                <CardContent className="relative aspect-video flex items-center justify-center p-0">
-                                <Image
-                                    src={img.imageUrl}
-                                    alt={img.description}
-                                    fill
-                                    className="object-cover rounded-lg"
-                                    data-ai-hint={img.imageHint}
-                                />
-                                </CardContent>
-                            </Card>
-                        </CarouselItem>
-                    ))}
-                    </CarouselContent>
-                </Carousel>
-
-                <Carousel setApi={setThumbApi} className="w-full mt-4">
-                    <CarouselContent className="h-24">
-                    {PlaceHolderImages.map((img, index) => (
-                        <CarouselItem key={index} className="pt-1 basis-1/2 md:basis-1/3 lg:basis-1/5 h-full">
-                            <div className="p-1 h-full">
-                                <Card 
-                                    className={`h-full flex flex-col transition-all ${index === selectedIndex ? 'ring-2 ring-primary' : 'opacity-60 hover:opacity-100'}`}
-                                    onClick={() => {
-                                        if (!mainApi) return;
-                                        mainApi.scrollTo(index);
-                                        plugin.current.reset(); // Reset autoplay timer on manual navigation
-                                    }}
-                                >
-                                    <CardContent className="flex-grow flex items-center justify-center p-2 text-center text-sm text-muted-foreground">
-                                        {img.description}
+                {isLoading && (
+                    <div className="flex justify-center items-center h-96">
+                        <Loader className="w-12 h-12 animate-spin" />
+                    </div>
+                )}
+                {!isLoading && carouselItems.length === 0 && (
+                    <div className="flex justify-center items-center h-48 border rounded-lg bg-muted">
+                        <p className="text-muted-foreground">No accomplished projects to display yet.</p>
+                    </div>
+                )}
+                {!isLoading && carouselItems.length > 0 && (
+                  <>
+                    <Carousel
+                        setApi={setMainApi}
+                        plugins={[plugin.current]}
+                        className="w-full"
+                        onMouseEnter={plugin.current.stop}
+                        onMouseLeave={() => {
+                            plugin.current.play()
+                        }}
+                    >
+                        <CarouselContent>
+                        {carouselItems.map((item, index) => (
+                            <CarouselItem key={item.id}>
+                                <Card>
+                                    <CardContent className="relative aspect-video flex items-center justify-center p-0">
+                                    <Image
+                                        src={item.imageUrl}
+                                        alt={item.description}
+                                        fill
+                                        className="object-cover rounded-lg"
+                                        data-ai-hint={item.imageHint}
+                                    />
                                     </CardContent>
                                 </Card>
-                            </div>
-                        </CarouselItem>
-                    ))}
-                    </CarouselContent>
-                </Carousel>
+                            </CarouselItem>
+                        ))}
+                        </CarouselContent>
+                    </Carousel>
+
+                    <Carousel setApi={setThumbApi} className="w-full mt-4">
+                        <CarouselContent className="h-24">
+                        {carouselItems.map((item, index) => (
+                            <CarouselItem key={item.id} className="pt-1 basis-1/2 md:basis-1/3 lg:basis-1/5 h-full">
+                                <div className="p-1 h-full">
+                                    <Card 
+                                        className={`h-full flex flex-col transition-all cursor-pointer ${index === selectedIndex ? 'ring-2 ring-primary' : 'opacity-60 hover:opacity-100'}`}
+                                        onClick={() => {
+                                            if (!mainApi) return;
+                                            mainApi.scrollTo(index);
+                                            plugin.current.reset(); // Reset autoplay timer on manual navigation
+                                        }}
+                                    >
+                                        <CardContent className="flex-grow flex items-center justify-center p-2 text-center text-sm text-muted-foreground">
+                                            {item.description}
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </CarouselItem>
+                        ))}
+                        </CarouselContent>
+                    </Carousel>
+                  </>
+                )}
             </div>
         </div>
     </section>
