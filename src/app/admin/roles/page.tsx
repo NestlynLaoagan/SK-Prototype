@@ -19,8 +19,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useCollection, useFirebase, updateDocumentNonBlocking, useMemoFirebase } from "@/firebase";
-import { collection, doc } from "firebase/firestore";
+import { useCollection, useFirebase, useMemoFirebase } from "@/firebase";
+import { collection, doc, updateDoc, setDoc, deleteDoc } from "firebase/firestore";
 import type { User as UserModel } from "@/lib/types";
 import { PasswordInput } from "@/components/ui/password-input";
 
@@ -57,7 +57,7 @@ export default function RolesPage() {
     }
   };
 
-  const handleConfirmRoleChange = () => {
+  const handleConfirmRoleChange = async () => {
     if (adminPassword !== ADMIN_PASSWORD) {
         toast({
             title: "Verification Failed",
@@ -67,21 +67,39 @@ export default function RolesPage() {
         return; 
     }
     
-    if (userToUpdate && firestore) {
-        const userDocRef = doc(firestore, 'users', userToUpdate.id);
-        updateDocumentNonBlocking(userDocRef, { role: userToUpdate.role }, { merge: true });
-        
-        toast({
-            title: "Role Saved",
-            description: `Role for ${userToUpdate.fullName} has been updated to ${userToUpdate.role}.`,
-        });
+    if (userToUpdate && firestore && users) {
+        const user = users.find(u => u.id === userToUpdate.id);
+        if (!user) return;
 
-        // Clear the staged change for this user
-        setStagedRoles(prev => {
-            const newState = { ...prev };
-            delete newState[userToUpdate.id];
-            return newState;
-        });
+        const userDocRef = doc(firestore, 'users', userToUpdate.id);
+        const adminDocRef = doc(firestore, 'admins', userToUpdate.id);
+
+        try {
+            await updateDoc(userDocRef, { role: userToUpdate.role });
+            if (userToUpdate.role === 'admin') {
+                await setDoc(adminDocRef, { email: user.email, uid: user.id });
+            } else {
+                await deleteDoc(adminDocRef);
+            }
+
+            toast({
+                title: "Role Saved",
+                description: `Role for ${userToUpdate.fullName} has been updated to ${userToUpdate.role}.`,
+            });
+            
+            // Clear the staged change for this user
+            setStagedRoles(prev => {
+                const newState = { ...prev };
+                delete newState[userToUpdate.id];
+                return newState;
+            });
+        } catch (error: any) {
+             toast({
+                variant: "destructive",
+                title: "Update Failed",
+                description: error.message || "An error occurred while saving the role.",
+            });
+        }
     }
     
     handleCancelRoleChange();

@@ -27,8 +27,6 @@ const formSchema = z.object({
   password: z.string().min(1, "Password is required."),
 })
 
-// This email is used to uniquely identify the single admin account.
-// Changing it forces the system to create a new admin user if the old one has a password sync issue.
 const ADMIN_EMAIL = "barangay.admin.connect.v3@system.local";
 const ADMIN_PASSWORD = "SKBAKAKENG@CCX23";
 
@@ -47,41 +45,42 @@ export function AdminLoginForm() {
   const isLoading = form.formState.isSubmitting;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // We only proceed if the entered password is the correct one.
-    if (values.password !== ADMIN_PASSWORD) {
-      toast({
-        variant: "destructive",
-        title: "Authentication Failed",
-        description: "Invalid password.",
-      });
-      return;
-    }
-
     try {
-      // First, attempt to sign in with the correct credentials.
-      await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
+      // First, try to sign in with the provided password.
+      const userCredential = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, values.password);
+      const user = userCredential.user;
+
+      // On successful login, ensure the user exists in the /admins collection to grant permissions.
+      const adminDocRef = doc(firestore, "admins", user.uid);
+      await setDoc(adminDocRef, { email: user.email, uid: user.uid }, { merge: true });
+
       toast({
         title: "Login Successful",
         description: "Welcome, Admin! You will be redirected shortly.",
       });
-    } catch (signInError: any) {
-      // If sign-in fails because the user doesn't exist, we create it.
-      if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
+
+    } catch (error: any) {
+      // If sign-in fails because the user doesn't exist, and the password is the initial setup password...
+      if ((error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') && values.password === ADMIN_PASSWORD) {
         try {
+          // ...create the admin account.
           const newUserCredential = await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
           const newUser = newUserCredential.user;
           
           await updateProfile(newUser, { displayName: 'SK Admin' });
 
-          // Create the user document in Firestore with the 'admin' role.
+          // Create the user document in /users
           const userDocRef = doc(firestore, "users", newUser.uid);
           await setDoc(userDocRef, {
             id: newUser.uid,
             fullName: "SK Admin",
             email: ADMIN_EMAIL,
             role: 'admin',
-            photoURL: newUser.photoURL,
           });
+          
+          // Also create the document in the /admins collection to grant permissions.
+          const adminDocRef = doc(firestore, "admins", newUser.uid);
+          await setDoc(adminDocRef, { email: newUser.email, uid: newUser.uid });
 
           toast({
             title: "Admin Account Created",
@@ -95,13 +94,19 @@ export function AdminLoginForm() {
               description: `Could not create admin account: ${createError.message}.`,
             });
         }
-      }
-      else {
+      } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        // Handle incorrect password for an existing admin account.
+        toast({
+            variant: "destructive",
+            title: "Authentication Failed",
+            description: "Invalid password.",
+        });
+      } else {
         // Handle other unexpected sign-in errors
          toast({
             variant: "destructive",
             title: "An Error Occurred",
-            description: signInError.message || "An unknown error occurred during login.",
+            description: error.message || "An unknown error occurred during login.",
         });
       }
     }
