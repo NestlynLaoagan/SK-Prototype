@@ -2,11 +2,7 @@
 "use client";
 
 import { AppHeader } from "@/components/app-header";
-import { Events } from "@/components/home/events";
-import { Feedback } from "@/components/home/feedback";
 import { Hero } from "@/components/home/hero";
-import { Projects } from "@/components/home/projects";
-import { IskaiChatbot } from "@/components/iskai-chatbot";
 import { Card, CardContent } from "@/components/ui/card";
 import { Megaphone, Users, Loader, Calendar, MapPin } from "lucide-react";
 import { CurrentYear } from "@/components/current-year";
@@ -17,6 +13,26 @@ import { useFirebase, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { format, parseISO } from "date-fns";
 import type { Announcement } from "@/lib/types";
+import dynamic from "next/dynamic";
+
+const Projects = dynamic(() => import('@/components/home/projects').then(mod => mod.Projects), {
+  loading: () => <div className="flex justify-center items-center h-96"><Loader className="w-12 h-12 animate-spin" /></div>,
+  ssr: false,
+});
+
+const Events = dynamic(() => import('@/components/home/events').then(mod => mod.Events), {
+  loading: () => <div className="flex justify-center items-center h-96"><Loader className="w-12 h-12 animate-spin" /></div>,
+  ssr: false,
+});
+
+const Feedback = dynamic(() => import('@/components/home/feedback').then(mod => mod.Feedback), {
+  loading: () => <div className="flex justify-center items-center h-96"><Loader className="w-12 h-12 animate-spin" /></div>,
+  ssr: false,
+});
+
+const IskaiChatbot = dynamic(() => import('@/components/iskai-chatbot').then(mod => mod.IskaiChatbot), {
+  ssr: false,
+});
 
 
 export default function HomePage() {
