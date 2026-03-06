@@ -57,3 +57,13 @@ export type Project = {
     imageUrls?: string[];
     reportUrls?: string[];
 };
+
+export type Feedback = {
+    id: string;
+    userId: string;
+    userName: string;
+    subject: string;
+    comment: string;
+    rating: 'good' | 'average' | 'bad';
+    submissionDate: string; // ISO 8601 date string
+};

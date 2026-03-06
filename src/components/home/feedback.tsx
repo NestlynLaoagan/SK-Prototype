@@ -19,37 +19,61 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useFirebase, useUser, setDocumentNonBlocking } from "@/firebase"
+import { doc, collection } from "firebase/firestore"
+import { Loader } from "lucide-react"
 
 const formSchema = z.object({
-  name: z.string().min(1, { message: "Name is required." }),
-  email: z.string().email({ message: "Please enter a valid email." }),
   subject: z.string().min(1, { message: "Subject is required." }),
-  rating: z.string({ required_error: "Please select a rating." }),
-  message: z.string().min(10, { message: "Message must be at least 10 characters." }),
+  rating: z.enum(["good", "average", "bad"], { required_error: "Please select a rating." }),
+  comment: z.string().min(10, { message: "Message must be at least 10 characters." }),
 })
 
 export function Feedback() {
   const router = useRouter()
   const { toast } = useToast()
+  const { firestore } = useFirebase()
+  const { user } = useUser()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      email: "",
       subject: "",
-      message: "",
+      comment: "",
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
+  const isLoading = form.formState.isSubmitting;
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!firestore || !user) {
+        toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "You must be logged in to submit feedback.",
+        });
+        return;
+    }
+
+    const feedbackRef = doc(collection(firestore, `users/${user.uid}/feedback`));
+
+    const feedbackData = {
+        ...values,
+        id: feedbackRef.id,
+        userId: user.uid,
+        userName: user.displayName || "Anonymous",
+        submissionDate: new Date().toISOString(),
+    };
+
+    setDocumentNonBlocking(feedbackRef, feedbackData, {});
+
     toast({
       title: "Feedback Sent!",
       description: "Thank you for your valuable input.",
-    })
-    form.reset()
-    router.push("/home#home")
+    });
+
+    form.reset();
+    router.push("/home#home");
   }
 
   return (
@@ -64,39 +88,11 @@ export function Feedback() {
             <Card className="w-full max-w-2xl">
                 <CardHeader>
                     <CardTitle>Feedback Form</CardTitle>
-                    <CardDescription>All fields are required.</CardDescription>
+                    <CardDescription>Your feedback is anonymous but associated with your account for administrative purposes.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <FormField
-                            control={form.control}
-                            name="name"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Full Name</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Juan Dela Cruz" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField
-                            control={form.control}
-                            name="email"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Email Address</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="juan@example.com" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                        </div>
                         <FormField
                         control={form.control}
                         name="subject"
@@ -134,7 +130,7 @@ export function Feedback() {
                         />
                         <FormField
                         control={form.control}
-                        name="message"
+                        name="comment"
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel>Message</FormLabel>
@@ -145,7 +141,9 @@ export function Feedback() {
                             </FormItem>
                         )}
                         />
-                        <Button type="submit" className="w-full sm:w-auto">Send Feedback</Button>
+                        <Button type="submit" className="w-full sm:w-auto" disabled={isLoading}>
+                            {isLoading ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : "Send Feedback"}
+                        </Button>
                     </form>
                     </Form>
                 </CardContent>

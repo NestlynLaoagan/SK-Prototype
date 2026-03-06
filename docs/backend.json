@@ -216,9 +216,18 @@
           "type": "string",
           "description": "Reference to User. (Relationship: User 1:N Feedback)"
         },
+        "userName": {
+            "type": "string",
+            "description": "The name of the user who submitted the feedback."
+        },
+        "subject": {
+            "type": "string",
+            "description": "The subject of the feedback message."
+        },
         "rating": {
-          "type": "number",
-          "description": "The rating given by the user (e.g., 1-5)."
+          "type": "string",
+          "description": "The rating given by the user (good, average, or bad).",
+          "enum": ["good", "average", "bad"]
         },
         "comment": {
           "type": "string",
@@ -233,8 +242,11 @@
       "required": [
         "id",
         "userId",
+        "userName",
+        "subject",
         "rating",
-        "comment"
+        "comment",
+        "submissionDate"
       ]
     },
     "Announcement": {
