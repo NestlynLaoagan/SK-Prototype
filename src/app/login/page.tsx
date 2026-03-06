@@ -13,7 +13,7 @@ export default function LoginPage() {
           className="hidden bg-cover bg-center lg:flex"
           style={{ backgroundImage: `url('https://picsum.photos/seed/loginbg/1200/800')` }}
         >
-          <div className="flex w-full flex-col items-center justify-center bg-black/60 p-8 text-center">
+          <div className="flex w-full flex-col items-center justify-center bg-black/40 p-8 text-center">
               <Logo />
               <h1 className="mt-4 font-headline text-5xl font-bold text-white">Barangay Bakakeng Central</h1>
               <p className="mt-2 text-neutral-200">Your one-stop portal for community engagement.</p>
