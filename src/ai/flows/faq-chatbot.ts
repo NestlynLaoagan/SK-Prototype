@@ -1,10 +1,21 @@
+'use server';
 // This file implements the Genkit flow for the FAQChatbot story.
 // It allows users to ask ISKAI, the AI chatbot, questions and receive helpful answers.
 
-'use server';
-
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import * as admin from 'firebase-admin';
+
+// Initialize Firebase Admin SDK if not already initialized
+if (!admin.apps.length) {
+  try {
+    admin.initializeApp();
+  } catch (e) {
+    console.error('Firebase admin initialization error', e);
+  }
+}
+
+const db = admin.firestore();
 
 const FaqChatbotInputSchema = z.object({
   question: z.string().describe('The user question for the FAQ chatbot.'),
@@ -22,11 +33,24 @@ export async function askIskai(input: FaqChatbotInput): Promise<FaqChatbotOutput
 
 const faqChatbotPrompt = ai.definePrompt({
   name: 'faqChatbotPrompt',
-  input: {schema: FaqChatbotInputSchema},
+  input: {
+    schema: z.object({
+      question: FaqChatbotInputSchema.shape.question,
+      faqContext: z
+        .string()
+        .describe('A list of questions and answers to use as a knowledge base.'),
+    }),
+  },
   output: {schema: FaqChatbotOutputSchema},
   prompt: `You are ISKAI, a helpful AI chatbot for Barangay Bakakeng Central.
 
-  Answer the following question about the barangay:
+  Use the following Frequently Asked Questions to answer the user's question.
+  If the question is not related to the provided FAQs, politely say that you cannot answer it.
+
+  FAQs:
+  {{{faqContext}}}
+
+  ---
 
   Question: {{{question}}}
 
@@ -41,7 +65,19 @@ const faqChatbotFlow = ai.defineFlow(
     outputSchema: FaqChatbotOutputSchema,
   },
   async input => {
-    const {output} = await faqChatbotPrompt(input);
+    // Fetch FAQs from Firestore
+    const faqsSnapshot = await db.collection('faqs').get();
+    const faqs = faqsSnapshot.docs.map(doc => doc.data());
+
+    // Format FAQs as a string for the prompt
+    const faqContext = faqs
+      .map(faq => `Q: ${faq.question}\nA: ${faq.answer}`)
+      .join('\n\n');
+
+    const {output} = await faqChatbotPrompt({
+      question: input.question,
+      faqContext: faqContext,
+    });
     return output!;
   }
 );
