@@ -24,9 +24,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AnnouncementForm } from "@/components/admin/announcement-form";
 import { useFirebase, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from "@/firebase";
-import { collection, doc, query, orderBy } from "firebase/firestore";
+import { collection, doc, query, orderBy, where } from "firebase/firestore";
 import { format, parseISO } from 'date-fns';
-import type { Announcement, Event as EventType, User as UserType } from "@/lib/types";
+import type { Announcement, Event as EventType, User as UserType, Project } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -51,10 +51,21 @@ export default function AdminDashboardPage() {
         () => firestore ? collection(firestore, 'users') : null,
         [firestore]
     );
+    const projectsCollectionRef = useMemoFirebase(
+        () => firestore ? collection(firestore, 'projects') : null,
+        [firestore]
+    );
 
     const { data: announcements, isLoading: isLoadingAnnouncements } = useCollection<Announcement>(announcementsCollectionRef);
     const { data: events, isLoading: isLoadingEvents } = useCollection<EventType>(eventsCollectionRef);
     const { data: users, isLoading: isLoadingUsers } = useCollection<UserType>(usersCollectionRef);
+
+    const accomplishedProjectsQuery = useMemoFirebase(() => 
+        projectsCollectionRef ? query(projectsCollectionRef, where("status", "==", "Completed")) : null, 
+      [projectsCollectionRef]);
+
+    const { data: accomplishedProjects, isLoading: isLoadingAccomplished } = useCollection<Project>(accomplishedProjectsQuery);
+
 
     const upcomingEventsCount = useMemo(() => {
         if (!events) return 0;
@@ -63,7 +74,7 @@ export default function AdminDashboardPage() {
 
     const stats = [
         { title: "Upcoming Events", value: isLoadingEvents ? <Loader className="h-5 w-5 animate-spin" /> : upcomingEventsCount, icon: Calendar },
-        { title: "Finished Projects", value: "45", icon: ClipboardCheck },
+        { title: "Finished Projects", value: isLoadingAccomplished ? <Loader className="h-5 w-5 animate-spin" /> : accomplishedProjects?.length ?? 0, icon: ClipboardCheck },
         { title: "Community Members", value: isLoadingUsers ? <Loader className="h-5 w-5 animate-spin" /> : users?.length ?? 0, icon: Users },
         { title: "Announcements", value: isLoadingAnnouncements ? <Loader className="h-5 w-5 animate-spin" /> : announcements?.length ?? 0, icon: Megaphone },
     ];
