@@ -26,7 +26,7 @@ export default function LogsPage() {
   const logsCollectionRef = useMemoFirebase(
     () => firestore ? query(collection(firestore, 'logs'), orderBy('timestamp', 'desc')) : null,
     [firestore]
-  );
+  ) as any;
   
   const { data: logs, isLoading } = useCollection<AuditLog>(logsCollectionRef);
 

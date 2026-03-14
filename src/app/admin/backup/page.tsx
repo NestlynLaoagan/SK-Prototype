@@ -38,7 +38,7 @@ export default function BackupPage() {
   const backupsCollectionRef = useMemoFirebase(
     () => firestore ? query(collection(firestore, 'backups'), orderBy('createdAt', 'desc')) : null,
     [firestore]
-  );
+  ) as any;
   
   const { data: backups, isLoading } = useCollection<BackupRecord>(backupsCollectionRef);
 

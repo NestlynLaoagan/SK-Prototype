@@ -40,7 +40,7 @@ export default function ArchivesPage() {
   const archivesCollectionRef = useMemoFirebase(
     () => firestore ? query(collection(firestore, 'archives'), orderBy('archivedAt', 'desc')) : null,
     [firestore]
-  );
+  ) as any;
   
   const { data: archivedRecords, isLoading } = useCollection<ArchivedRecord>(archivesCollectionRef);
 
