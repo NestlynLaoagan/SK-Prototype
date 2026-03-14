@@ -67,3 +67,38 @@ export type Feedback = {
     rating: 'good' | 'average' | 'bad';
     submissionDate: string; // ISO 8601 date string
 };
+
+export type AuditLog = {
+    id: string;
+    userName: string;
+    userRole: 'admin' | 'member';
+    action: string;
+    module: string;
+    description: string;
+    timestamp: string;
+    status: 'Success' | 'Failed';
+    ipAddress?: string;
+};
+
+export type ArchivedRecord = {
+    id: string;
+    recordId: string;
+    recordType: 'project' | 'event' | 'announcement' | 'feedback' | 'user';
+    title: string;
+    data: Record<string, any>;
+    archivedAt: string;
+    archivedBy: string;
+    archivedByName: string;
+};
+
+export type BackupRecord = {
+    id: string;
+    fileName: string;
+    backupType: 'manual' | 'automatic';
+    fileSize: number;
+    createdAt: string;
+    createdBy: string;
+    createdByName: string;
+    status: 'completed' | 'failed' | 'in-progress';
+    downloadUrl?: string;
+};
